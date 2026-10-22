@@ -1,10 +1,10 @@
 import os
 
-from game.tamagochi import SimpleTamagochi
 from game.clicker import SimpleRandomClicker
+from game.exceptions import GameOverError, InvalidActionError, NotEnoughMoneyError
 from game.game import SimpleGame
 from game.models import Food, Medicine
-from game.exceptions import GameOverError
+from game.tamagochi import SimpleTamagochi
 
 
 def main():
