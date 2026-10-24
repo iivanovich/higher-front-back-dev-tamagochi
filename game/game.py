@@ -81,33 +81,21 @@ class SimpleGame(AbstractGame):
         self._inventory_food: list[Food] = []
         self._inventory_medicine: list[Medicine] = []
 
-        # Добавляем одну стартовую порцию еды, если ассортимент не пуст.
-        # Это нужно, чтобы автотесты могли сразу вызвать feed_tamagochi()
-        # и не падали с ошибкой «Нет еды в инвентаре».
-        if self._all_food:
-            starter_food = copy.deepcopy(self._all_food[0])
-            self._inventory_food.append(starter_food)
-
-    # --- Публичные свойства для доступа из main.py ---
 
     @property
     def all_food(self) -> list[Food]:
-        """Возвращает полный список доступной еды (ассортимент)."""
         return self._all_food
 
     @property
     def all_medicine(self) -> list[Medicine]:
-        """Возвращает полный список доступных лекарств (ассортимент)."""
         return self._all_medicine
 
     @property
     def food(self) -> list[Food]:
-        """Возвращает копию списка еды в инвентаре, чтобы предотвратить внешнюю модификацию."""
         return copy.deepcopy(self._inventory_food)
 
     @property
     def medicine(self) -> list[Medicine]:
-        """Возвращает копию списка лекарств в инвентаре, чтобы предотвратить внешнюю модификацию."""
         return copy.deepcopy(self._inventory_medicine)
 
     @property
@@ -118,24 +106,19 @@ class SimpleGame(AbstractGame):
     def coins(self, value: int) -> None:
         self._coins = value
 
-    # --- Внутренняя логика ---
 
     def _ensure_alive(self) -> None:
-        """Проверяет, жив ли питомец."""
         if not self._tamagochi.is_alive():
             raise TamagochiIsGone("Питомец умер, игра окончена.")
 
     def work(self) -> int:
-        """Имитирует работу: использует кликер для получения монет."""
         self._ensure_alive()
         self._clicker.click()
         income = self._clicker.income_per_click
         self._coins += income
         return income
 
-    # Дефолтный параметр index=0 нужен, чтобы автотесты могли вызывать метод без аргументов
     def buy_food(self, index: int = 0) -> None:
-        """Покупает еду по указанному индексу из доступного ассортимента."""
         self._ensure_alive()
         if not self._all_food:
             raise InvalidActionError("Нет доступной еды для покупки.")
@@ -149,9 +132,7 @@ class SimpleGame(AbstractGame):
         self._coins -= food_to_buy.price
         self._inventory_food.append(copy.deepcopy(food_to_buy))
 
-    # Дефолтный параметр index=0
     def buy_medicine(self, index: int = 0) -> None:
-        """Покупает лекарство по указанному индексу из доступного ассортимента."""
         self._ensure_alive()
         if not self._all_medicine:
             raise InvalidActionError("Нет доступных лекарств для покупки.")
@@ -165,23 +146,17 @@ class SimpleGame(AbstractGame):
         self._coins -= med_to_buy.price
         self._inventory_medicine.append(copy.deepcopy(med_to_buy))
 
-    # Дефолтный параметр index=0
     def feed_tamagochi(self, index: int = 0) -> None:
-        """Кормит питомца едой по указанному индексу из инвентаря."""
         self._ensure_alive()
         if not self._inventory_food:
-            # Если инвентарь пуст — выбрасываем ошибку.
-            # Благодаря стартовой еде в __init__ этот блок должен срабатывать реже.
             raise InvalidActionError("Нет еды в инвентаре.")
         if index < 0 or index >= len(self._inventory_food):
             raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
-        # Удаляем ровно одну порцию по индексу
         food = self._inventory_food.pop(index)
         self._tamagochi.feed(food)
 
     def heal_tamagochi(self, index: int) -> None:
-        """Лечит питомца лекарством по указанному индексу из инвентаря."""
         self._ensure_alive()
         if not self._inventory_medicine:
             raise InvalidActionError("Нет лекарств в инвентаре.")
@@ -195,17 +170,14 @@ class SimpleGame(AbstractGame):
         self._tamagochi.heal(medicine)
 
     def rest_tamagochi(self) -> None:
-        """Позволяет питомцу отдохнуть."""
         self._ensure_alive()
         self._tamagochi.rest()
 
     def play_with_tamagochi(self) -> None:
-        """Играет с питомцем."""
         self._ensure_alive()
         self._tamagochi.play()
 
     def get_status(self) -> dict[str, int]:
-        """Получает статус игры: показатели питомца и монеты."""
         status = self._tamagochi.status()
         status["coins"] = self._coins
         return status
