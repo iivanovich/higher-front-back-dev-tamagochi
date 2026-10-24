@@ -150,7 +150,7 @@ class SimpleGame(AbstractGame):
     def feed_tamagochi(self, index: int = 0) -> None:
         self._ensure_alive()
         if not self._inventory_food:
-            raise InvalidActionError("Нет еды в инвентаре.")
+            raise InvalidActionError('Нет еды в инвентаре.')
         if index < 0 or index >= len(self._inventory_food):
             raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
