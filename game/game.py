@@ -2,7 +2,7 @@ import copy
 from abc import ABC, abstractmethod
 
 from .clicker import AbstractClicker
-from .exceptions import TamagochiIsGone, NotEnoughMoney, InvalidActionError
+from .exceptions import InvalidActionError, NotEnoughMoney, TamagochiIsGone
 from .models import Food, Medicine
 from .tamagochi import AbstractTamagochi
 

@@ -1,12 +1,14 @@
 import os
 
 from game.clicker import SimpleRandomClicker
-from game.constants import MAX_HP
-from game.exceptions import GameError, TamagochiIsGone, NotEnoughMoney, InvalidActionError
+from game.exceptions import (
+    InvalidActionError,
+    NotEnoughMoney,
+    TamagochiIsGone,
+)
 from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
-
 
 MENU_ITEMS = [
     "1. Пойти на работу (кликер)",
