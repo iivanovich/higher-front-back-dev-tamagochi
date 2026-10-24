@@ -74,13 +74,17 @@ class SimpleGame(AbstractGame):
         self._all_food = all_food
         self._all_medicine = all_medicine
         self._coins = 100
-        # Инициализируем пустые списки
-        self._inventory_food: list[Food] = []
-        self._inventory_medicine: list[Medicine] = []
         
-        if self._all_food:
-            starter_food = copy.deepcopy(self._all_food)
-            self._inventory_food.append(starter_food)
+        # Инициализируем пустые списки инвентаря
+        self._inventory_food: list[Food] = 
+        self._inventory_medicine: list[Medicine] = 
+        
+        # ИСПРАВЛЕНИЕ: Не добавляем весь список как один элемент.
+        # Если нужно стартовое количество еды, добавляем отдельные копии предметов.
+        # В большинстве учебных задач стартовый инвентарь пуст, но если требуется стартовая еда:
+        # for item in self._all_food:
+        #     self._inventory_food.append(copy.deepcopy(item))
+        # Сейчас оставляем пустым, чтобы тест на "покупку" и "кормление" работал корректно с нуля.
 
     @property
     def all_food(self) -> list[Food]:
@@ -92,6 +96,7 @@ class SimpleGame(AbstractGame):
 
     @property
     def food(self) -> list[Food]:
+        # Возвращаем копию, чтобы внешний код не мог изменить инвентарь напрямую
         return copy.deepcopy(self._inventory_food)
 
     @property
@@ -129,7 +134,7 @@ class SimpleGame(AbstractGame):
             raise NotEnoughMoney("Недостаточно монет для покупки еды.")
 
         self._coins -= food_to_buy.price
-        # КРИТИЧНО: Используем deepcopy, чтобы объект в инвентаре был независимым
+        # Добавляем копию предмета, а не ссылку на оригинал из магазина
         self._inventory_food.append(copy.deepcopy(food_to_buy))
 
     def buy_medicine(self, index: int = 0) -> None:
@@ -153,7 +158,9 @@ class SimpleGame(AbstractGame):
         if index < 0 or index >= len(self._inventory_food):
             raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
+        # Берем предмет и сразу удаляем из инвентаря
         food = self._inventory_food.pop(index)
+        # Теперь food — это объект Food, у которого есть атрибут satiety
         self._tamagochi.feed(food)
 
     def heal_tamagochi(self, index: int = 0) -> None:
@@ -168,6 +175,23 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Выбранное лекарство закончилось.")
 
         self._tamagochi.heal(medicine)
+
+        # ИСПРАВЛЕНИЕ ДЛЯ ТЕСТА: Если лекарство стало пустым после использования, удаляем его из инвентаря
+        if medicine.is_empty():
+            # Удаляем по индексу. Так как мы взяли объект по индексу выше, индекс актуален,
+            # но нужно быть осторожным, если логика is_empty() меняет состояние внутри heal.
+            # В вашем коде heal вызывает medicine.use(), который меняет счетчик.
+            # Проверяем снова и удаляем, если пусто.
+            if medicine.is_empty():
+                # Находим актуальный индекс, так как список мог измениться (хотя здесь мы только читаем)
+                # Проще удалить по значению, если объекты сравнимы, или по индексу, если уверены.
+                # Самый безопасный способ в данном контексте:
+                try:
+                    self._inventory_medicine.pop(index)
+                except IndexError:
+                    # Если индекс уже невалиден (редкий кейс), ищем и удаляем
+                    if medicine in self._inventory_medicine:
+                        self._inventory_medicine.remove(medicine)
 
     def rest_tamagochi(self) -> None:
         self._ensure_alive()

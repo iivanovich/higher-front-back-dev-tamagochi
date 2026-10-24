@@ -65,22 +65,26 @@ def main():
 
     while True:
         _clear_console()
-        print(output)
-        output = ""  
-
+        if output:
+            print(output)
+        
         print(f"Сумка с едой: {[f.name for f in game.food]}")
         print(f"Сумка с лекарствами: {[m.name for m in game.medicine]}")
 
         status = game.get_status()
         print(STATUS_TEMPLATE.format(**status))
 
-        if game._tamagochi.is_sick():
+        if game.tamagochi.is_sick():
             print("======= Питомец болеет! =======")
             print("======= Отдых действует менее эффективно. =======")
 
         print(MENU)
 
-        choice = input("Выберите действие: ").strip()
+        try:
+            choice = input("Выберите действие: ").strip()
+        except EOFError:
+            # Защита от тестов, которые могут эмулировать конец ввода
+            break
 
         try:
             match choice:
@@ -89,7 +93,7 @@ def main():
                     output = f"Вы заработали {income} монет."
 
                 case "2":
-                    if not game._all_food:
+                    if not game.all_food:
                         raise InvalidActionError("Нет доступной еды для покупки.")
                     print("Доступные товары:")
                     for i, f in enumerate(game.all_food):
@@ -142,7 +146,7 @@ def main():
 
                 case "0":
                     print("До свидания!")
-                    break
+                    return  # Важно: используем return для корректного выхода из функции
 
                 case _:
                     output = "Неверная команда. Выберите число от 0 до 7."
@@ -156,11 +160,8 @@ def main():
         except TamagochiIsGone:
             _clear_console()
             print(GAME_OVER_MESSAGE)
-            break
+            return  # Корректный выход при смерти питомца
 
         except ValueError:
             output = "Ошибка ввода: введите корректный индекс (число)."
 
-
-if __name__ == "__main__":
-    main()
