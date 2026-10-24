@@ -77,6 +77,10 @@ class SimpleGame(AbstractGame):
         self._inventory_food: list[Food] = []
         self._inventory_medicine: list[Medicine] = []
 
+        if self._all_food and not self._inventory_food:
+            starter_food = copy.deepcopy(self._all_food[0])
+            self._inventory_food.append(starter_food)
+
     @property
     def all_food(self) -> list[Food]:
         return self._all_food
