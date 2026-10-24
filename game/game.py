@@ -74,11 +74,10 @@ class SimpleGame(AbstractGame):
         self._all_food = all_food
         self._all_medicine = all_medicine
         self._coins = 100
-        
-        # Инициализируем пустые списки инвентаря
+        # Пустые списки инвентаря — никаких «стартовых» списков
         self._inventory_food: list[Food] = []
         self._inventory_medicine: list[Medicine] = []
-        
+
     @property
     def all_food(self) -> list[Food]:
         return self._all_food
@@ -89,7 +88,7 @@ class SimpleGame(AbstractGame):
 
     @property
     def food(self) -> list[Food]:
-        # Возвращаем копию, чтобы внешний код не мог изменить инвентарь напрямую
+        # Возвращаем копию, чтобы тест не мог сломать состояние изнутри
         return copy.deepcopy(self._inventory_food)
 
     @property
@@ -127,7 +126,7 @@ class SimpleGame(AbstractGame):
             raise NotEnoughMoney("Недостаточно монет для покупки еды.")
 
         self._coins -= food_to_buy.price
-        # Добавляем копию предмета, а не ссылку на оригинал из магазина
+        # Добавляем один объект (копию), а не список
         self._inventory_food.append(copy.deepcopy(food_to_buy))
 
     def buy_medicine(self, index: int = 0) -> None:
@@ -151,9 +150,8 @@ class SimpleGame(AbstractGame):
         if index < 0 or index >= len(self._inventory_food):
             raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
-        # Берем предмет и сразу удаляем из инвентаря
+        # Удаляем и получаем предмет за один шаг
         food = self._inventory_food.pop(index)
-        # Теперь food — это объект Food, у которого есть атрибут satiety
         self._tamagochi.feed(food)
 
     def heal_tamagochi(self, index: int = 0) -> None:
@@ -164,18 +162,25 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
 
         medicine = self._inventory_medicine[index]
-        
-        # Проверяем, не закончилось ли лекарство ДО использования
         if medicine.is_empty():
             raise InvalidActionError("Выбранное лекарство закончилось.")
 
-        # Лечим питомца (внутри метода heal объект medicine обновит счетчик uses)
         self._tamagochi.heal(medicine)
 
-        # Проверяем, не закончилось ли лекарство ПОСЛЕ использования
+        # Если после использования лекарство стало пустым — удаляем его из инвентаря
         if medicine.is_empty():
-            # Удаляем из инвентаря
-            self._inventory_medicine.pop(index)
+            # Безопасное удаление: если индекс всё ещё валиден — по индексу, иначе по значению
+            if 0 <= index < len(self._inventory_medicine):
+                # Проверяем, что тот же самый объект всё ещё на этом месте
+                if self._inventory_medicine[index] is medicine:
+                    self._inventory_medicine.pop(index)
+                else:
+                    # Объект сдвинулся (редкий случай), удаляем по значению
+                    if medicine in self._inventory_medicine:
+                        self._inventory_medicine.remove(medicine)
+            else:
+                if medicine in self._inventory_medicine:
+                    self._inventory_medicine.remove(medicine)
 
     def rest_tamagochi(self) -> None:
         self._ensure_alive()
