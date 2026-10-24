@@ -74,7 +74,7 @@ class SimpleGame(AbstractGame):
         self._all_food = all_food
         self._all_medicine = all_medicine
         self._coins = 100
-        # Пустые списки инвентаря — никаких «стартовых» списков
+        # Важно: пустой инвентарь, без «стартовых списков»
         self._inventory_food: list[Food] = []
         self._inventory_medicine: list[Medicine] = []
 
@@ -88,7 +88,6 @@ class SimpleGame(AbstractGame):
 
     @property
     def food(self) -> list[Food]:
-        # Возвращаем копию, чтобы тест не мог сломать состояние изнутри
         return copy.deepcopy(self._inventory_food)
 
     @property
@@ -102,6 +101,11 @@ class SimpleGame(AbstractGame):
     @coins.setter
     def coins(self, value: int) -> None:
         self._coins = value
+
+    # Публичное свойство tamagochi — нужно для теста test_main_import_and_exit
+    @property
+    def tamagochi(self) -> AbstractTamagochi:
+        return self._tamagochi
 
     def _ensure_alive(self) -> None:
         if not self._tamagochi.is_alive():
@@ -167,15 +171,12 @@ class SimpleGame(AbstractGame):
 
         self._tamagochi.heal(medicine)
 
-        # Если после использования лекарство стало пустым — удаляем его из инвентаря
         if medicine.is_empty():
             # Безопасное удаление: если индекс всё ещё валиден — по индексу, иначе по значению
             if 0 <= index < len(self._inventory_medicine):
-                # Проверяем, что тот же самый объект всё ещё на этом месте
                 if self._inventory_medicine[index] is medicine:
                     self._inventory_medicine.pop(index)
                 else:
-                    # Объект сдвинулся (редкий случай), удаляем по значению
                     if medicine in self._inventory_medicine:
                         self._inventory_medicine.remove(medicine)
             else:
