@@ -8,8 +8,6 @@ from .tamagochi import AbstractTamagochi
 
 
 class AbstractGame(ABC):
-    """Абстрактный базовый класс для игровой логики тамагочи."""
-
     @abstractmethod
     def __init__(
         self,
@@ -18,54 +16,52 @@ class AbstractGame(ABC):
         all_food: list[Food],
         all_medicine: list[Medicine],
     ) -> None:
-        """Инициализирует игру с заданными компонентами: питомцем, кликером, списками товаров."""
+        pass
 
     @abstractmethod
     def work(self) -> int:
-        """Выполняет действие «работа»: генерирует доход через кликер."""
+        pass
 
     @abstractmethod
     def buy_food(self, index: int) -> None:
-        """Покупает еду по указанному индексу из доступного ассортимента."""
+        pass
 
     @abstractmethod
     def buy_medicine(self, index: int) -> None:
-        """Покупает лекарство по указанному индексу из доступного ассортимента."""
+        pass
 
     @abstractmethod
     def feed_tamagochi(self, index: int) -> None:
-        """Кормит питомца едой по указанному индексу из инвентаря."""
+        pass
 
     @abstractmethod
     def heal_tamagochi(self, index: int) -> None:
-        """Лечит питомца лекарством по указанному индексу из инвентаря."""
+        pass
 
     @abstractmethod
     def rest_tamagochi(self) -> None:
-        """Позволяет питомцу отдохнуть."""
+        pass
 
     @abstractmethod
     def play_with_tamagochi(self) -> None:
-        """Играет с питомцем."""
+        pass
 
     @abstractmethod
     def get_status(self) -> dict[str, int]:
-        """Возвращает текущий статус игры: показатели питомца и количество монет."""
+        pass
 
     @property
     @abstractmethod
     def food(self) -> list[Food]:
-        """Возвращает список еды в инвентаре (без возможности внешней модификации)."""
+        pass
 
     @property
     @abstractmethod
     def medicine(self) -> list[Medicine]:
-        """Возвращает список лекарств в инвентаре (без возможности внешней модификации)."""
+        pass
 
 
 class SimpleGame(AbstractGame):
-    """Реализация базовой игровой логики: управление ресурсами и действиями с питомцем."""
-
     def __init__(
         self,
         tamagochi: AbstractTamagochi,
@@ -81,6 +77,9 @@ class SimpleGame(AbstractGame):
         self._inventory_food: list[Food] = []
         self._inventory_medicine: list[Medicine] = []
 
+        if self._all_food and not self._inventory_food:
+            starter_food = copy.deepcopy(self._all_food[0])
+            self._inventory_food.append(starter_food)
 
     @property
     def all_food(self) -> list[Food]:
@@ -105,7 +104,6 @@ class SimpleGame(AbstractGame):
     @coins.setter
     def coins(self, value: int) -> None:
         self._coins = value
-
 
     def _ensure_alive(self) -> None:
         if not self._tamagochi.is_alive():
