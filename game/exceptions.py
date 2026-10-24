@@ -1,14 +1,18 @@
-class GameOverError(Exception):
+class GameError(Exception):
+    """Базовый класс для всех игровых исключений."""
     pass
 
-class NotEnoughMoneyError(Exception):
+
+class TamagochiIsGone(GameError):
+    """Исключение, которое выбрасывается."""
     pass
 
-class InvalidActionError(Exception):
+
+class NotEnoughMoney(GameError):
+    """Исключение при нехватке денег для действия."""
     pass
 
-class TamagochiIsGone(Exception):
-    """Исключение, когда питомец умер."""
 
-class NotEnoughMoney(Exception):
-    """Исключение для случаев нехватки денег."""
+class InvalidActionError(GameError):
+    """Исключение для недопустимых действий в игровой логике."""
+    pass
