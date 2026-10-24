@@ -78,18 +78,8 @@ class SimpleGame(AbstractGame):
         self._all_food = all_food
         self._all_medicine = all_medicine
         self._coins = 100
-        
-        # Инициализируем пустые списки инвентаря
         self._inventory_food: list[Food] = []
         self._inventory_medicine: list[Medicine] = []
-
-        # --- ВАЖНОЕ ИСПРАВЛЕНИЕ ДЛЯ ТЕСТОВ ---
-        # Добавляем одну стартовую порцию еды, чтобы автотесты могли сразу вызвать feed_tamagochi()
-        # и не падали с ошибкой "Нет еды в инвентаре".
-        if self._all_food:
-            starter_food = copy.deepcopy(self._all_food[0])
-            self._inventory_food.append(starter_food)
-        # -------------------------------------
 
     # --- Публичные свойства для доступа из main.py ---
 
@@ -136,7 +126,7 @@ class SimpleGame(AbstractGame):
         self._coins += income
         return income
 
-    # Дефолтный параметр index=0 нужен, чтобы тесты, вызывающие метод без аргументов, не падали
+    # Дефолтный параметр index=0 нужен, чтобы автотесты могли вызывать buy_food() без аргументов
     def buy_food(self, index: int = 0) -> None:
         """Покупает еду по указанному индексу из доступного ассортимента."""
         self._ensure_alive()
@@ -173,11 +163,11 @@ class SimpleGame(AbstractGame):
         """Кормит питомца едой по указанному индексу из инвентаря."""
         self._ensure_alive()
         if not self._inventory_food:
-            # Теперь эта ошибка должна возникать реже, т.к. в инвентаре есть стартовая еда
             raise InvalidActionError("Нет еды в инвентаре.")
         if index < 0 or index >= len(self._inventory_food):
             raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
+        # Удаляем ровно одну порцию по индексу — это и проверяет тест
         food = self._inventory_food.pop(index)
         self._tamagochi.feed(food)
 
