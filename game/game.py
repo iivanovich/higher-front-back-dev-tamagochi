@@ -76,16 +76,9 @@ class SimpleGame(AbstractGame):
         self._coins = 100
         
         # Инициализируем пустые списки инвентаря
-        self._inventory_food: list[Food] = 
-        self._inventory_medicine: list[Medicine] = 
+        self._inventory_food: list[Food] = []
+        self._inventory_medicine: list[Medicine] = []
         
-        # ИСПРАВЛЕНИЕ: Не добавляем весь список как один элемент.
-        # Если нужно стартовое количество еды, добавляем отдельные копии предметов.
-        # В большинстве учебных задач стартовый инвентарь пуст, но если требуется стартовая еда:
-        # for item in self._all_food:
-        #     self._inventory_food.append(copy.deepcopy(item))
-        # Сейчас оставляем пустым, чтобы тест на "покупку" и "кормление" работал корректно с нуля.
-
     @property
     def all_food(self) -> list[Food]:
         return self._all_food
@@ -171,27 +164,18 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
 
         medicine = self._inventory_medicine[index]
+        
+        # Проверяем, не закончилось ли лекарство ДО использования
         if medicine.is_empty():
             raise InvalidActionError("Выбранное лекарство закончилось.")
 
+        # Лечим питомца (внутри метода heal объект medicine обновит счетчик uses)
         self._tamagochi.heal(medicine)
 
-        # ИСПРАВЛЕНИЕ ДЛЯ ТЕСТА: Если лекарство стало пустым после использования, удаляем его из инвентаря
+        # Проверяем, не закончилось ли лекарство ПОСЛЕ использования
         if medicine.is_empty():
-            # Удаляем по индексу. Так как мы взяли объект по индексу выше, индекс актуален,
-            # но нужно быть осторожным, если логика is_empty() меняет состояние внутри heal.
-            # В вашем коде heal вызывает medicine.use(), который меняет счетчик.
-            # Проверяем снова и удаляем, если пусто.
-            if medicine.is_empty():
-                # Находим актуальный индекс, так как список мог измениться (хотя здесь мы только читаем)
-                # Проще удалить по значению, если объекты сравнимы, или по индексу, если уверены.
-                # Самый безопасный способ в данном контексте:
-                try:
-                    self._inventory_medicine.pop(index)
-                except IndexError:
-                    # Если индекс уже невалиден (редкий кейс), ищем и удаляем
-                    if medicine in self._inventory_medicine:
-                        self._inventory_medicine.remove(medicine)
+            # Удаляем из инвентаря
+            self._inventory_medicine.pop(index)
 
     def rest_tamagochi(self) -> None:
         self._ensure_alive()
