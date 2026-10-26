@@ -1,8 +1,13 @@
+# game/constants.py
+
 MAX_HUNGER = 100
 MIN_HUNGER = 0
+
 MAX_HP = 100
 MIN_HP = 0
+
 MAX_ENERGY = 100
 MIN_ENERGY = 0
+
 MAX_FATIGUE = 100
 MIN_FATIGUE = 0

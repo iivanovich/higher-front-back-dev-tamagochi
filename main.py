@@ -1,39 +1,11 @@
+# main.py
 import os
 
 from game.clicker import SimpleRandomClicker
-from game.exceptions import (
-    InvalidActionError,
-    NotEnoughMoney,
-    TamagochiIsGone,
-)
+from game.exceptions import GameOverError, InvalidActionError, NotEnoughMoneyError
 from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
-
-MENU_ITEMS = [
-    "1. Пойти на работу (кликер)",
-    "2. Купить еду",
-    "3. Купить лекарство",
-    "4. Покормить питомца",
-    "5. Вылечить питомца",
-    "6. Поиграть с питомцем",
-    "7. Отдых",
-    "0. Выход",
-]
-MENU = "\n".join(MENU_ITEMS)
-
-STATUS_TEMPLATE = (
-    "\nСтатус: голод {hunger}, здоровье {hp}, энергия {energy}, монеты {coins}\n"
-)
-
-WELCOME_MESSAGE = "Добро пожаловать в тамагочи-кликер!"
-GAME_OVER_MESSAGE = "\n💀 Игра окончена: ваш питомец умер."
-ERROR_NOT_ENOUGH_MONEY = "💸 Недостаточно монет для покупки."
-ERROR_INVALID_ACTION = "⚠️ Невозможно выполнить действие: {message}"
-
-
-def _clear_console():
-    os.system("clear" if os.name != "nt" else "cls")
 
 
 def main():
@@ -60,110 +32,115 @@ def main():
         all_medicine=all_medicine,
     )
 
-    print(WELCOME_MESSAGE)
+    print("Добро пожаловать в тамагочи-кликер!")
     output = ""
 
     while True:
-        _clear_console()
-        if output:
-            print(output)
-        
+        os.system("clear" if os.name != "nt" else "cls")
+        print(output)
+        output = ""
+
         print(f"Сумка с едой: {[f.name for f in game.food]}")
         print(f"Сумка с лекарствами: {[m.name for m in game.medicine]}")
 
-        status = game.get_status()
-        print(STATUS_TEMPLATE.format(**status))
+        try:
+            status = game.get_status()
+        except GameOverError:
+            print("\n😿 Игра окончена: ваш питомец умер.")
+            break
 
-        if game.tamagochi.is_sick():
-            print("======= Питомец болеет! =======")
+        print(
+            f"\nСтатус: голод {status['hunger']}, здоровье {status['hp']}, "
+            f"энергия {status['energy']}, монеты {status['coins']}\n"
+        )
+
+        if game.food and game.food[0].name == "Бургер":
+            # Это просто заглушка, чтобы убрать лишнее предупреждение статических анализаторов
+            pass
+
+        if tamagochi.is_sick():
+            print("======= Тамагочи болеет! =======")
             print("======= Отдых действует менее эффективно. =======")
 
-        print(MENU)
+        menu_lines = [
+            "1. Пойти на работу (кликер)",
+            "2. Купить еду",
+            "3. Купить лекарство",
+            "4. Покормить питомца",
+            "5. Вылечить питомца",
+            "6. Поиграть с питомцем",
+            "7. Отдохнуть",
+            "0. Выход",
+        ]
+        print("\n".join(menu_lines))
 
-        try:
-            choice = input("Выберите действие: ").strip()
-        except EOFError:
-            # Защита от тестов, которые могут эмулировать конец ввода
-            break
+        choice = input("Выберите действие: ").strip()
 
         try:
             match choice:
                 case "1":
                     income = game.work()
                     output = f"Вы заработали {income} монет."
-
+                    tamagochi.update()
                 case "2":
-                    if not game.all_food:
-                        raise InvalidActionError("Нет доступной еды для покупки.")
-                    print("Доступные товары:")
-                    for i, f in enumerate(game.all_food):
+                    if not game.food:
+                        print("Нет доступной еды для покупки.")
+                        continue
+                    print("Доступная еда:")
+                    for i, f in enumerate(all_food):
                         print(f"{i}. {f.name} (сытость {f.satiety}, цена {f.price})")
-                    idx = int(input("Введите индекс товара: ").strip())
+                    idx = int(input("Какую еду купить? Введите индекс: ").strip())
                     game.buy_food(idx)
                     output = "Еда куплена."
-
                 case "3":
-                    if not game.all_medicine:
-                        raise InvalidActionError("Нет доступных лекарств для покупки.")
+                    if not game.medicine:
+                        print("Нет доступных лекарств для покупки.")
+                        continue
                     print("Доступные лекарства:")
-                    for i, m in enumerate(game.all_medicine):
-                        print(
-                            f"{i}. {m.name} (лечение {m.heal_hp} HP, "
-                            f"использований {m.number_of_uses}, цена {m.price})"
-                        )
-                    idx = int(input("Введите индекс лекарства: ").strip())
+                    for i, m in enumerate(all_medicine):
+                        print(f"{i}. {m.name} (лечение {m.heal_hp}, цена {m.price})")
+                    idx = int(input("Какое лекарство купить? Введите индекс: ").strip())
                     game.buy_medicine(idx)
                     output = "Лекарство куплено."
-
                 case "4":
                     if not game.food:
-                        raise InvalidActionError("Нет еды в инвентаре.")
+                        print("Нет еды в инвентаре.")
+                        continue
                     print("Еда в инвентаре:")
                     for i, f in enumerate(game.food):
                         print(f"{i}. {f.name} (сытость {f.satiety})")
-                    # Здесь обязательно должен быть ввод индекса
                     idx = int(input("Чем покормить питомца? Введите индекс: ").strip())
-                    game.feed_tamagochi(idx)  # <-- Передаём idx, теперь это обязательно
+                    game.feed_tamagochi(idx)
                     output = "Питомец покормлен."
-
-
                 case "5":
                     if not game.medicine:
-                        raise InvalidActionError("Нет лекарств в инвентаре.")
+                        print("Нет лекарств в инвентаре.")
+                        continue
                     print("Лекарства в инвентаре:")
                     for i, m in enumerate(game.medicine):
-                        remaining = m.number_of_uses - m.uses
-                        print(f"{i}. {m.name} (осталось использований: {remaining})")
-                    idx = int(input("Какое лекарство дать питомцу? Введите индекс: ").strip())
+                        print(f"{i}. {m.name} (осталось использований {m.number_of_uses - m.uses})")
+                    idx = int(input("Каким лекарством лечить? Введите индекс: ").strip())
                     game.heal_tamagochi(idx)
-                    output = "Питомцу дали лекарство."
-
+                    output = "Питомец вылечен."
                 case "6":
                     game.play_with_tamagochi()
                     output = "Вы поиграли с питомцем."
-
                 case "7":
                     game.rest_tamagochi()
                     output = "Питомец отдохнул."
-
                 case "0":
                     print("До свидания!")
-                    return  # Важно: используем return для корректного выхода из функции
-
+                    return
                 case _:
-                    output = "Неверная команда. Выберите число от 0 до 7."
-
-        except (NotEnoughMoney, InvalidActionError) as e:
-            if isinstance(e, NotEnoughMoney):
-                output = ERROR_NOT_ENOUGH_MONEY
-            else:
-                output = ERROR_INVALID_ACTION.format(message=str(e))
-
-        except TamagochiIsGone:
-            _clear_console()
-            print(GAME_OVER_MESSAGE)
-            return  # Корректный выход при смерти питомца
-
+                    output = "Неверный выбор, попробуйте снова."
         except ValueError:
-            output = "Ошибка ввода: введите корректный индекс (число)."
+            output = "Пожалуйста, введите корректный номер."
+        except (InvalidActionError, NotEnoughMoneyError) as e:
+            output = str(e)
+        except GameOverError:
+            print("\n😿 Игра окончена: ваш питомец умер.")
+            break
 
+
+if __name__ == "__main__":
+    main()
