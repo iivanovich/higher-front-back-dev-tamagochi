@@ -98,7 +98,6 @@ class SimpleGame(AbstractGame):
 
         print(prompt)
         for i, item in enumerate(items):
-            # Для еды и лекарств делаем разный вывод
             if hasattr(item, "price") and hasattr(item, "satiety"):
                 print(f"{i}. {item.name} (сытость {item.satiety}, цена {item.price})")
             elif hasattr(item, "heal_hp"):
@@ -122,10 +121,15 @@ class SimpleGame(AbstractGame):
         if not self._all_food:
             raise InvalidActionError("Нет доступной еды для покупки.")
 
+        # Если индекс передан явно (тестами), считаем его валидным
         if index is None:
-            index = self._get_index_from_user(
-                self._all_food, "Доступная еда:"
-            )
+            index = self._get_index_from_user(self._all_food, "Доступная еда:")
+        else:
+            # Для тестов не делаем жёсткую проверку выхода за границы,
+            # потому что тесты сами дают корректный индекс
+            if index < 0 or index >= len(self._all_food):
+                # Но если вдруг реально выходит за границы — кидаем ошибку
+                raise InvalidActionError("Некорректный индекс товара.")
 
         food_to_buy = self._all_food[index]
 
@@ -143,9 +147,10 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Нет доступных лекарств для покупки.")
 
         if index is None:
-            index = self._get_index_from_user(
-                self._all_medicine, "Доступные лекарства:"
-            )
+            index = self._get_index_from_user(self._all_medicine, "Доступные лекарства:")
+        else:
+            if index < 0 or index >= len(self._all_medicine):
+                raise InvalidActionError("Некорректный индекс товара.")
 
         med_to_buy = self._all_medicine[index]
 
@@ -163,7 +168,6 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Нет еды в инвентаре.")
 
         if index is None:
-            # Для инвентаря выводим отдельный текст
             print("Еда в инвентаре:")
             for i, f in enumerate(self._inventory_food):
                 print(f"{i}. {f.name} (сытость {f.satiety})")
@@ -176,6 +180,9 @@ class SimpleGame(AbstractGame):
             if idx < 0 or idx >= len(self._inventory_food):
                 raise InvalidActionError("Некорректный индекс еды в инвентаре.")
             index = idx
+        else:
+            if index < 0 or index >= len(self._inventory_food):
+                raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
         food = self._inventory_food.pop(index)
         self._tamagochi.feed(food)
@@ -203,6 +210,9 @@ class SimpleGame(AbstractGame):
             if idx < 0 or idx >= len(self._inventory_medicine):
                 raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
             index = idx
+        else:
+            if index < 0 or index >= len(self._inventory_medicine):
+                raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
 
         medicine = self._inventory_medicine[index]
         if medicine.is_empty():
