@@ -1,5 +1,6 @@
 # game/models.py
 from dataclasses import dataclass, field
+
 from .exceptions import InvalidActionError
 
 

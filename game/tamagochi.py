@@ -1,7 +1,17 @@
 # game/tamagochi.py
 import random
 from abc import ABC, abstractmethod
-from .constants import MAX_HUNGER, MIN_HUNGER, MAX_HP, MIN_HP, MAX_ENERGY, MIN_ENERGY, MAX_FATIGUE, MIN_FATIGUE
+
+from .constants import (
+    MAX_ENERGY,
+    MAX_FATIGUE,
+    MAX_HP,
+    MAX_HUNGER,
+    MIN_ENERGY,
+    MIN_FATIGUE,
+    MIN_HP,
+    MIN_HUNGER,
+)
 from .exceptions import InvalidActionError, TamagochiIsGone
 from .models import Food, Medicine
 

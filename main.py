@@ -54,10 +54,6 @@ def main():
             f"энергия {status['energy']}, монеты {status['coins']}\n"
         )
 
-        if game.food and game.food[0].name == "Бургер":
-            # Это просто заглушка, чтобы убрать лишнее предупреждение статических анализаторов
-            pass
-
         if tamagochi.is_sick():
             print("======= Тамагочи болеет! =======")
             print("======= Отдых действует менее эффективно. =======")
@@ -83,7 +79,7 @@ def main():
                     output = f"Вы заработали {income} монет."
                     tamagochi.update()
                 case "2":
-                    if not game.food:
+                    if not all_food:
                         print("Нет доступной еды для покупки.")
                         continue
                     print("Доступная еда:")
@@ -93,7 +89,7 @@ def main():
                     game.buy_food(idx)
                     output = "Еда куплена."
                 case "3":
-                    if not game.medicine:
+                    if not all_medicine:
                         print("Нет доступных лекарств для покупки.")
                         continue
                     print("Доступные лекарства:")

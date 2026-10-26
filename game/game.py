@@ -1,6 +1,5 @@
 # game/game.py
 from abc import ABC, abstractmethod
-from typing import List
 
 from .clicker import AbstractClicker
 from .exceptions import GameOverError, InvalidActionError, NotEnoughMoneyError
@@ -14,8 +13,8 @@ class AbstractGame(ABC):
         self,
         tamagochi: AbstractTamagochi,
         clicker: AbstractClicker,
-        all_food: List[Food],
-        all_medicine: List[Medicine],
+        all_food: list[Food],
+        all_medicine: list[Medicine],
     ) -> None:
         pass
 
@@ -53,12 +52,12 @@ class AbstractGame(ABC):
 
     @property
     @abstractmethod
-    def food(self) -> List[Food]:
+    def food(self) -> list[Food]:
         pass
 
     @property
     @abstractmethod
-    def medicine(self) -> List[Medicine]:
+    def medicine(self) -> list[Medicine]:
         pass
 
 
@@ -69,8 +68,8 @@ class SimpleGame(AbstractGame):
         self,
         tamagochi: AbstractTamagochi,
         clicker: AbstractClicker,
-        all_food: List[Food],
-        all_medicine: List[Medicine],
+        all_food: list[Food],
+        all_medicine: list[Medicine],
     ) -> None:
         self._tamagochi = tamagochi
         self._clicker = clicker
@@ -78,8 +77,8 @@ class SimpleGame(AbstractGame):
         self._all_food = list(all_food)
         self._all_medicine = list(all_medicine)
         self._coins = 100  # стартовые монеты
-        self._inventory_food: List[Food] = []
-        self._inventory_medicine: List[Medicine] = []
+        self._inventory_food: list[Food] = []
+        self._inventory_medicine: list[Medicine] = []
 
     def _ensure_alive(self) -> None:
         if not self._tamagochi.is_alive():
@@ -177,9 +176,9 @@ class SimpleGame(AbstractGame):
         return status
 
     @property
-    def food(self) -> List[Food]:
+    def food(self) -> list[Food]:
         return self._inventory_food
 
     @property
-    def medicine(self) -> List[Medicine]:
+    def medicine(self) -> list[Medicine]:
         return self._inventory_medicine
