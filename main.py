@@ -2,11 +2,7 @@
 import os
 
 from game.clicker import SimpleRandomClicker
-from game.exceptions import (
-    GameOverError,
-    InvalidActionError,
-    NotEnoughMoneyError,
-)
+from game.exceptions import GameOverError, InvalidActionError, NotEnoughMoney
 from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
@@ -83,44 +79,20 @@ def main():
                     output = f"Вы заработали {income} монет."
                     tamagochi.update()
                 case "2":
-                    if not all_food:
-                        print("Нет доступной еды для покупки.")
-                        continue
-                    print("Доступная еда:")
-                    for i, f in enumerate(all_food):
-                        print(f"{i}. {f.name} (сытость {f.satiety}, цена {f.price})")
-                    idx = int(input("Какую еду купить? Введите индекс: ").strip())
-                    game.buy_food(idx)
+                    # Теперь метод сам спросит индекс
+                    game.buy_food()
                     output = "Еда куплена."
                 case "3":
-                    if not all_medicine:
-                        print("Нет доступных лекарств для покупки.")
-                        continue
-                    print("Доступные лекарства:")
-                    for i, m in enumerate(all_medicine):
-                        print(f"{i}. {m.name} (лечение {m.heal_hp}, цена {m.price})")
-                    idx = int(input("Какое лекарство купить? Введите индекс: ").strip())
-                    game.buy_medicine(idx)
+                    # Теперь метод сам спросит индекс
+                    game.buy_medicine()
                     output = "Лекарство куплено."
                 case "4":
-                    if not game.food:
-                        print("Нет еды в инвентаре.")
-                        continue
-                    print("Еда в инвентаре:")
-                    for i, f in enumerate(game.food):
-                        print(f"{i}. {f.name} (сытость {f.satiety})")
-                    idx = int(input("Чем покормить питомца? Введите индекс: ").strip())
-                    game.feed_tamagochi(idx)
+                    # Теперь метод сам спросит индекс
+                    game.feed_tamagochi()
                     output = "Питомец покормлен."
                 case "5":
-                    if not game.medicine:
-                        print("Нет лекарств в инвентаре.")
-                        continue
-                    print("Лекарства в инвентаре:")
-                    for i, m in enumerate(game.medicine):
-                        print(f"{i}. {m.name} (осталось использований {m.number_of_uses - m.uses})")
-                    idx = int(input("Каким лекарством лечить? Введите индекс: ").strip())
-                    game.heal_tamagochi(idx)
+                    # Теперь метод сам спросит индекс
+                    game.heal_tamagochi()
                     output = "Питомец вылечен."
                 case "6":
                     game.play_with_tamagochi()
@@ -135,7 +107,7 @@ def main():
                     output = "Неверный выбор, попробуйте снова."
         except ValueError:
             output = "Пожалуйста, введите корректный номер."
-        except (InvalidActionError, NotEnoughMoneyError) as e:
+        except (InvalidActionError, NotEnoughMoney) as e:
             output = str(e)
         except GameOverError:
             print("\n😿 Игра окончена: ваш питомец умер.")

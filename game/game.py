@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 
 from .clicker import AbstractClicker
-from .exceptions import GameOverError, InvalidActionError, NotEnoughMoneyError
+from .exceptions import GameOverError, InvalidActionError, NotEnoughMoney
 from .models import Food, Medicine
 from .tamagochi import AbstractTamagochi
 
@@ -23,19 +23,19 @@ class AbstractGame(ABC):
         pass
 
     @abstractmethod
-    def buy_food(self, index: int) -> None:
+    def buy_food(self) -> None:
         pass
 
     @abstractmethod
-    def buy_medicine(self, index: int) -> None:
+    def buy_medicine(self) -> None:
         pass
 
     @abstractmethod
-    def feed_tamagochi(self, index: int) -> None:
+    def feed_tamagochi(self) -> None:
         pass
 
     @abstractmethod
-    def heal_tamagochi(self, index: int) -> None:
+    def heal_tamagochi(self) -> None:
         pass
 
     @abstractmethod
@@ -92,62 +92,103 @@ class SimpleGame(AbstractGame):
         self._coins += income
         return income
 
-    def buy_food(self, index: int) -> None:
-        """Покупает еду по индексу из доступного ассортимента."""
+    def buy_food(self) -> None:
+        """Покупает еду: показывает список и запрашивает индекс у пользователя."""
         self._ensure_alive()
 
-        if index < 0 or index >= len(self._all_food):
+        if not self._all_food:
+            raise InvalidActionError("Нет доступной еды для покупки.")
+
+        print("Доступная еда:")
+        for i, f in enumerate(self._all_food):
+            print(f"{i}. {f.name} (сытость {f.satiety}, цена {f.price})")
+
+        try:
+            idx = int(input("Какую еду купить? Введите индекс: ").strip())
+        except ValueError:
+            raise InvalidActionError("Некорректный ввод индекса.")
+
+        if idx < 0 or idx >= len(self._all_food):
             raise InvalidActionError("Некорректный индекс товара.")
 
-        food_to_buy = self._all_food[index]
+        food_to_buy = self._all_food[idx]
 
         if self._coins < food_to_buy.price:
-            raise NotEnoughMoneyError("Недостаточно монет.")
+            raise NotEnoughMoney("Недостаточно монет.")
 
         self._coins -= food_to_buy.price
         self._inventory_food.append(food_to_buy)
 
-    def buy_medicine(self, index: int) -> None:
-        """Покупает лекарство по индексу из доступного ассортимента."""
+    def buy_medicine(self) -> None:
+        """Покупает лекарство: показывает список и запрашивает индекс у пользователя."""
         self._ensure_alive()
 
-        if index < 0 or index >= len(self._all_medicine):
+        if not self._all_medicine:
+            raise InvalidActionError("Нет доступных лекарств для покупки.")
+
+        print("Доступные лекарства:")
+        for i, m in enumerate(self._all_medicine):
+            print(f"{i}. {m.name} (лечение {m.heal_hp}, цена {m.price})")
+
+        try:
+            idx = int(input("Какое лекарство купить? Введите индекс: ").strip())
+        except ValueError:
+            raise InvalidActionError("Некорректный ввод индекса.")
+
+        if idx < 0 or idx >= len(self._all_medicine):
             raise InvalidActionError("Некорректный индекс товара.")
 
-        med_to_buy = self._all_medicine[index]
+        med_to_buy = self._all_medicine[idx]
 
         if self._coins < med_to_buy.price:
-            raise NotEnoughMoneyError("Недостаточно монет.")
+            raise NotEnoughMoney("Недостаточно монет.")
 
         self._coins -= med_to_buy.price
         self._inventory_medicine.append(med_to_buy)
 
-    def feed_tamagochi(self, index: int) -> None:
-        """Кормит питомца едой из инвентаря по указанному индексу."""
+    def feed_tamagochi(self) -> None:
+        """Кормит питомца: показывает инвентарь и запрашивает индекс у пользователя."""
         self._ensure_alive()
 
         if not self._inventory_food:
             raise InvalidActionError("Нет еды в инвентаре.")
 
-        if index < 0 or index >= len(self._inventory_food):
+        print("Еда в инвентаре:")
+        for i, f in enumerate(self._inventory_food):
+            print(f"{i}. {f.name} (сытость {f.satiety})")
+
+        try:
+            idx = int(input("Чем покормить питомца? Введите индекс: ").strip())
+        except ValueError:
+            raise InvalidActionError("Некорректный ввод индекса.")
+
+        if idx < 0 or idx >= len(self._inventory_food):
             raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
-        food = self._inventory_food.pop(index)
+        food = self._inventory_food.pop(idx)
         self._tamagochi.feed(food)
 
-    def heal_tamagochi(self, index: int) -> None:
-        """Лечит питомца лекарством из инвентаря по указанному индексу."""
+    def heal_tamagochi(self) -> None:
+        """Лечит питомца: показывает инвентарь и запрашивает индекс у пользователя."""
         self._ensure_alive()
 
         if not self._inventory_medicine:
             raise InvalidActionError("Нет лекарств в инвентаре.")
 
-        if index < 0 or index >= len(self._inventory_medicine):
+        print("Лекарства в инвентаре:")
+        for i, m in enumerate(self._inventory_medicine):
+            print(f"{i}. {m.name} (осталось использований {m.number_of_uses - m.uses})")
+
+        try:
+            idx = int(input("Каким лекарством лечить? Введите индекс: ").strip())
+        except ValueError:
+            raise InvalidActionError("Некорректный ввод индекса.")
+
+        if idx < 0 or idx >= len(self._inventory_medicine):
             raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
 
-        medicine = self._inventory_medicine[index]
+        medicine = self._inventory_medicine[idx]
         if medicine.is_empty():
-            # Ищем первое непустое лекарство
             found = None
             for med in self._inventory_medicine:
                 if not med.is_empty():
