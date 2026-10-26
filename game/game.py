@@ -117,8 +117,8 @@ class SimpleGame(AbstractGame):
     def buy_food(self, index: int | None = None) -> None:
         """
         Покупает еду.
-        Если index передан явно (тестами) — доверяем ему и не проверяем границы.
-        Если index None (игра в консоли) — запрашиваем у пользователя с валидацией.
+        Если index передан явно (тестами) — берём без проверок.
+        Если index None (игра в консоли) — запрашиваем и валидируем.
         """
         self._ensure_alive()
 
@@ -128,8 +128,8 @@ class SimpleGame(AbstractGame):
         # Если индекс не передан — спрашиваем у пользователя (тут нужна валидация)
         if index is None:
             index = self._get_index_from_user(self._all_food, "Доступная еда:")
-        # Если индекс передан явно (тесты), мы ему доверяем и НЕ проверяем границы.
 
+        # ВАЖНО: если индекс передан (тесты), мы ему доверяем и НЕ делаем никаких проверок границ
         food_to_buy = self._all_food[index]
 
         if self._coins < food_to_buy.price:
@@ -141,8 +141,8 @@ class SimpleGame(AbstractGame):
     def buy_medicine(self, index: int | None = None) -> None:
         """
         Покупает лекарство.
-        Если index передан явно (тестами) — доверяем ему и не проверяем границы.
-        Если index None (игра в консоли) — запрашиваем у пользователя с валидацией.
+        Если index передан явно (тестами) — берём без проверок.
+        Если index None (игра в консоли) — запрашиваем и валидируем.
         """
         self._ensure_alive()
 
@@ -152,8 +152,8 @@ class SimpleGame(AbstractGame):
         # Если индекс не передан — спрашиваем у пользователя (тут нужна валидация)
         if index is None:
             index = self._get_index_from_user(self._all_medicine, "Доступные лекарства:")
-        # Если индекс передан явно (тесты), мы ему доверяем и НЕ проверяем границы.
 
+        # ВАЖНО: если индекс передан (тесты), мы ему доверяем и НЕ делаем никаких проверок границ
         med_to_buy = self._all_medicine[index]
 
         if self._coins < med_to_buy.price:
