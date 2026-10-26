@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 
 from .clicker import AbstractClicker
-from .exceptions import GameOverError, InvalidActionError, NotEnoughMoneyError
+from .exceptions import GameOverError, InvalidActionError, NotEnoughMoney
 from .models import Food, Medicine
 from .tamagochi import AbstractTamagochi
 
@@ -102,7 +102,7 @@ class SimpleGame(AbstractGame):
         food_to_buy = self.all_food[0]  # берём первую доступную
 
         if self.coins < food_to_buy.price:
-            raise NotEnoughMoneyError("Недостаточно монет.")
+            raise NotEnoughMoney("Недостаточно монет.")
 
         self.coins -= food_to_buy.price
         self.inventory_food.append(food_to_buy)
@@ -117,7 +117,7 @@ class SimpleGame(AbstractGame):
         med_to_buy = self.all_medicine[0]  # берём первое доступное
 
         if self.coins < med_to_buy.price:
-            raise NotEnoughMoneyError("Недостаточно монет.")
+            raise NotEnoughMoney("Недостаточно монет.")
 
         self.coins -= med_to_buy.price
         self.inventory_medicine.append(med_to_buy)
