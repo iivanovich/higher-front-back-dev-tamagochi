@@ -16,7 +16,7 @@ class AbstractClicker(ABC):
 
 
 class SimpleRandomClicker(AbstractClicker):
-    """Кликер, который приносит случайное количество монет в заданном диапазоне."""
+    """Кликер, который приносит случайное количество монет."""
 
     def __init__(self, min_income: int, max_income: int) -> None:
         if min_income < 0 or max_income < 0 or min_income > max_income:
@@ -28,7 +28,7 @@ class SimpleRandomClicker(AbstractClicker):
 
     @property
     def income_per_click(self) -> int:
-        """Возвращает текущий доход за клик (случайное значение)."""
+        """Возвращает доход, полученный при последнем клике."""
         return self._current_income
 
     def click(self) -> None:

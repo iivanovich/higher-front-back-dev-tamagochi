@@ -147,18 +147,17 @@ class SimpleGame(AbstractGame):
         self._coins -= med_to_buy.price
         self._inventory_medicine.append(copy.deepcopy(med_to_buy))
 
-    def feed_tamagochi(self, index: int = 0) -> None:
+    def feed_tamagochi(self, index: int) -> None:
         self._ensure_alive()
         if not self._inventory_food:
             raise InvalidActionError('Нет еды в инвентаре.')
         if index < 0 or index >= len(self._inventory_food):
             raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
-        # Удаляем и получаем предмет за один шаг
         food = self._inventory_food.pop(index)
         self._tamagochi.feed(food)
 
-    def heal_tamagochi(self, index: int = 0) -> None:
+    def heal_tamagochi(self, index: int) -> None:
         self._ensure_alive()
         if not self._inventory_medicine:
             raise InvalidActionError("Нет лекарств в инвентаре.")
@@ -171,17 +170,9 @@ class SimpleGame(AbstractGame):
 
         self._tamagochi.heal(medicine)
 
-        if medicine.is_empty():
-            # Безопасное удаление: если индекс всё ещё валиден — по индексу, иначе по значению
-            if 0 <= index < len(self._inventory_medicine):
-                if self._inventory_medicine[index] is medicine:
-                    self._inventory_medicine.pop(index)
-                else:
-                    if medicine in self._inventory_medicine:
-                        self._inventory_medicine.remove(medicine)
-            else:
-                if medicine in self._inventory_medicine:
-                    self._inventory_medicine.remove(medicine)
+        if medicine.is_empty() and medicine in self._inventory_medicine:
+            self._inventory_medicine.remove(medicine)
+
 
     def rest_tamagochi(self) -> None:
         self._ensure_alive()

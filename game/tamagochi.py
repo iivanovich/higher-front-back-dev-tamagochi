@@ -174,13 +174,7 @@ class SimpleTamagochi(AbstractTamagochi):
         self._sick = sick
 
     def update(self) -> None:
-        """
-        Обновляет состояние питомца каждый игровой тик.
-
-        Изменяет показатели голода, энергии, усталости, проверяет возможность
-        заболевания и состояние здоровья. При достижении критического уровня
-        здоровья питомец умирает, и выбрасывается исключение TamagochiIsGone.
-        """
+        """Обновляет состояние питомца каждый игровой тик."""
         if not self._is_alive:
             return
 
@@ -216,4 +210,4 @@ class SimpleTamagochi(AbstractTamagochi):
 
         if self._hp <= 0:
             self._is_alive = False
-            raise TamagochiIsGone("Питомец умер.")
+
