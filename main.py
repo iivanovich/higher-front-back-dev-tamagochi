@@ -79,19 +79,15 @@ def main():
                     output = f"Вы заработали {income} монет."
                     tamagochi.update()
                 case "2":
-                    # Теперь метод сам спросит индекс
-                    game.buy_food()
+                    game.buy_food()  # индекс запросит сам метод
                     output = "Еда куплена."
                 case "3":
-                    # Теперь метод сам спросит индекс
-                    game.buy_medicine()
+                    game.buy_medicine()  # индекс запросит сам метод
                     output = "Лекарство куплено."
                 case "4":
-                    # Теперь метод сам спросит индекс
                     game.feed_tamagochi()
                     output = "Питомец покормлен."
                 case "5":
-                    # Теперь метод сам спросит индекс
                     game.heal_tamagochi()
                     output = "Питомец вылечен."
                 case "6":
