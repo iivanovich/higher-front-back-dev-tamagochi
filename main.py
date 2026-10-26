@@ -121,9 +121,11 @@ def main():
                     print("Еда в инвентаре:")
                     for i, f in enumerate(game.food):
                         print(f"{i}. {f.name} (сытость {f.satiety})")
+                    # Здесь обязательно должен быть ввод индекса
                     idx = int(input("Чем покормить питомца? Введите индекс: ").strip())
-                    game.feed_tamagochi(idx)
+                    game.feed_tamagochi(idx)  # <-- Передаём idx, теперь это обязательно
                     output = "Питомец покормлен."
+
 
                 case "5":
                     if not game.medicine:
