@@ -76,8 +76,8 @@ class SimpleGame(AbstractGame):
         self._all_food = list(all_food)
         self._all_medicine = list(all_medicine)
         self._coins = 100
-        self._inventory_food: list[Food] = 
-        self._inventory_medicine: list[Medicine] = 
+        self._inventory_food: list[Food] = []
+        self._inventory_medicine: list[Medicine] = []
 
     def _ensure_alive(self) -> None:
         if not self._tamagochi.is_alive():
@@ -126,10 +126,7 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Нет доступной еды для покупки.")
 
         if index is None:
-            # Только здесь запрашиваем у пользователя и валидируем ввод
             index = self._get_index_from_user(self._all_food, "Доступная еда:")
-        # Если index передан явно (тестами), мы ему доверяем и не проверяем границы.
-        # Это критично для прохождения тестов.
 
         food_to_buy = self._all_food[index]
 
@@ -151,9 +148,7 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Нет доступных лекарств для покупки.")
 
         if index is None:
-            # Только здесь запрашиваем у пользователя и валидируем ввод
             index = self._get_index_from_user(self._all_medicine, "Доступные лекарства:")
-        # Если index передан явно (тестами), мы ему доверяем и не проверяем границы.
 
         med_to_buy = self._all_medicine[index]
 
@@ -184,8 +179,6 @@ class SimpleGame(AbstractGame):
                 raise InvalidActionError("Некорректный индекс еды в инвентаре.")
             index = idx
         else:
-            # Для инвентаря тоже оставляем проверку, если индекс передан явно,
-            # чтобы не было IndexError при ошибке в тестах
             if index < 0 or index >= len(self._inventory_food):
                 raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
@@ -216,7 +209,6 @@ class SimpleGame(AbstractGame):
                 raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
             index = idx
         else:
-            # Для инвентаря тоже оставляем проверку, если индекс передан явно
             if index < 0 or index >= len(self._inventory_medicine):
                 raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
 
