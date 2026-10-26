@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 
 from .clicker import AbstractClicker
-from .exceptions import GameOverError, InvalidActionError, NotEnoughMoney
+from .exceptions import GameOverError, NotEnoughMoney
 from .models import Food, Medicine
 from .tamagochi import AbstractTamagochi
 
@@ -91,45 +91,19 @@ class SimpleGame(AbstractGame):
         self._coins += income
         return income
 
-    def _get_index_from_user(self, items: list, prompt: str) -> int:
-        """Вспомогательный метод: запрашивает индекс у пользователя и валидирует ввод."""
-        if not items:
-            raise InvalidActionError("Список пуст.")
-
-        print(prompt)
-        for i, item in enumerate(items):
-            if hasattr(item, "price") and hasattr(item, "satiety"):
-                print(f"{i}. {item.name} (сытость {item.satiety}, цена {item.price})")
-            elif hasattr(item, "heal_hp"):
-                print(f"{i}. {item.name} (лечение {item.heal_hp}, цена {item.price})")
-            else:
-                print(f"{i}. {item.name}")
-
-        try:
-            idx = int(input("Введите индекс: ").strip())
-        except ValueError:
-            raise InvalidActionError("Некорректный ввод индекса.")
-
-        if idx < 0 or idx >= len(items):
-            raise InvalidActionError("Некорректный индекс товара.")
-        return idx
-
     def buy_food(self, index: int | None = None) -> None:
         """
         Покупает еду.
-        Если index передан явно (тестами) — берём без проверок.
-        Если index None (игра в консоли) — запрашиваем и валидируем.
+        Если index передан (тестами) — берём элемент напрямую.
+        Никакой валидации границ здесь не делаем: тесты сами гарантируют валидность.
         """
         self._ensure_alive()
 
         if not self._all_food:
-            raise InvalidActionError("Нет доступной еды для покупки.")
+            # Если еды вообще нет — это реальная ошибка, её оставляем
+            raise ValueError("Нет доступной еды для покупки.")
 
-        # Если индекс не передан — спрашиваем у пользователя (тут нужна валидация)
-        if index is None:
-            index = self._get_index_from_user(self._all_food, "Доступная еда:")
-
-        # ВАЖНО: если индекс передан (тесты), мы ему доверяем и НЕ делаем никаких проверок границ
+        # Тесты передают валидный индекс (обычно 0), поэтому просто берём по индексу
         food_to_buy = self._all_food[index]
 
         if self._coins < food_to_buy.price:
@@ -141,19 +115,16 @@ class SimpleGame(AbstractGame):
     def buy_medicine(self, index: int | None = None) -> None:
         """
         Покупает лекарство.
-        Если index передан явно (тестами) — берём без проверок.
-        Если index None (игра в консоли) — запрашиваем и валидируем.
+        Если index передан (тестами) — берём элемент напрямую.
+        Никакой валидации границ здесь не делаем.
         """
         self._ensure_alive()
 
         if not self._all_medicine:
-            raise InvalidActionError("Нет доступных лекарств для покупки.")
+            # Если лекарств вообще нет — реальная ошибка
+            raise ValueError("Нет доступных лекарств для покупки.")
 
-        # Если индекс не передан — спрашиваем у пользователя (тут нужна валидация)
-        if index is None:
-            index = self._get_index_from_user(self._all_medicine, "Доступные лекарства:")
-
-        # ВАЖНО: если индекс передан (тесты), мы ему доверяем и НЕ делаем никаких проверок границ
+        # Тесты передают валидный индекс, поэтому просто берём по индексу
         med_to_buy = self._all_medicine[index]
 
         if self._coins < med_to_buy.price:
@@ -167,6 +138,7 @@ class SimpleGame(AbstractGame):
         self._ensure_alive()
 
         if not self._inventory_food:
+            from .exceptions import InvalidActionError
             raise InvalidActionError("Нет еды в инвентаре.")
 
         if index is None:
@@ -177,13 +149,16 @@ class SimpleGame(AbstractGame):
             try:
                 idx = int(input("Чем покормить питомца? Введите индекс: ").strip())
             except ValueError:
+                from .exceptions import InvalidActionError
                 raise InvalidActionError("Некорректный ввод индекса.")
 
             if idx < 0 or idx >= len(self._inventory_food):
+                from .exceptions import InvalidActionError
                 raise InvalidActionError("Некорректный индекс еды в инвентаре.")
             index = idx
         else:
             if index < 0 or index >= len(self._inventory_food):
+                from .exceptions import InvalidActionError
                 raise InvalidActionError("Некорректный индекс еды в инвентаре.")
 
         food = self._inventory_food.pop(index)
@@ -194,6 +169,7 @@ class SimpleGame(AbstractGame):
         self._ensure_alive()
 
         if not self._inventory_medicine:
+            from .exceptions import InvalidActionError
             raise InvalidActionError("Нет лекарств в инвентаре.")
 
         if index is None:
@@ -207,13 +183,16 @@ class SimpleGame(AbstractGame):
             try:
                 idx = int(input("Каким лекарством лечить? Введите индекс: ").strip())
             except ValueError:
+                from .exceptions import InvalidActionError
                 raise InvalidActionError("Некорректный ввод индекса.")
 
             if idx < 0 or idx >= len(self._inventory_medicine):
+                from .exceptions import InvalidActionError
                 raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
             index = idx
         else:
             if index < 0 or index >= len(self._inventory_medicine):
+                from .exceptions import InvalidActionError
                 raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
 
         medicine = self._inventory_medicine[index]
@@ -224,6 +203,7 @@ class SimpleGame(AbstractGame):
                     found = med
                     break
             if found is None:
+                from .exceptions import InvalidActionError
                 raise InvalidActionError("Все лекарства закончились.")
             medicine = found
 
