@@ -125,8 +125,10 @@ class SimpleGame(AbstractGame):
         if not self._all_food:
             raise InvalidActionError("Нет доступной еды для покупки.")
 
+        # Если индекс не передан — спрашиваем у пользователя (тут нужна валидация)
         if index is None:
             index = self._get_index_from_user(self._all_food, "Доступная еда:")
+        # Если индекс передан явно (тесты), мы ему доверяем и НЕ проверяем границы.
 
         food_to_buy = self._all_food[index]
 
@@ -147,8 +149,10 @@ class SimpleGame(AbstractGame):
         if not self._all_medicine:
             raise InvalidActionError("Нет доступных лекарств для покупки.")
 
+        # Если индекс не передан — спрашиваем у пользователя (тут нужна валидация)
         if index is None:
             index = self._get_index_from_user(self._all_medicine, "Доступные лекарства:")
+        # Если индекс передан явно (тесты), мы ему доверяем и НЕ проверяем границы.
 
         med_to_buy = self._all_medicine[index]
 
