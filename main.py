@@ -1,11 +1,20 @@
-# main.py
 import os
 
 from game.clicker import SimpleRandomClicker
-from game.exceptions import GameOverError, InvalidActionError, NotEnoughMoney
+from game.exceptions import (
+    GameOverError,
+    InvalidActionError,
+    NotEnoughMoney,
+    TamagochiIsGone,
+)
 from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
+
+STATUS_TEMPLATE = (
+    "\nСтатус: голод {hunger}, здоровье {hp}, "
+    "энергия {energy}, монеты {coins}\n"
+)
 
 
 def main():
@@ -45,14 +54,11 @@ def main():
 
         try:
             status = game.get_status()
-        except GameOverError:
-            print("\n😿 Игра окончена: ваш питомец умер.")
+        except (GameOverError, TamagochiIsGone):
+            print("\n🪦 Игра окончена: ваш питомец умер.")
             break
 
-        print(
-            f"\nСтатус: голод {status['hunger']}, здоровье {status['hp']}, "
-            f"энергия {status['energy']}, монеты {status['coins']}\n"
-        )
+        print(STATUS_TEMPLATE.format(**status))
 
         if tamagochi.is_sick():
             print("======= Тамагочи болеет! =======")
@@ -77,18 +83,22 @@ def main():
                 case "1":
                     income = game.work()
                     output = f"Вы заработали {income} монет."
-                    tamagochi.update()
+                    # Логика обновления питомца перенесена внутрь game.work() и других методов
                 case "2":
-                    game.buy_food()
+                    idx = int(input("Введите индекс еды для покупки: "))
+                    game.buy_food(idx)
                     output = "Еда куплена."
                 case "3":
-                    game.buy_medicine()
+                    idx = int(input("Введите индекс лекарства для покупки: "))
+                    game.buy_medicine(idx)
                     output = "Лекарство куплено."
                 case "4":
-                    game.feed_tamagochi()
+                    idx = int(input("Введите индекс еды для кормления: "))
+                    game.feed_tamagochi(idx)
                     output = "Питомец покормлен."
                 case "5":
-                    game.heal_tamagochi()
+                    idx = int(input("Введите индекс лекарства для лечения: "))
+                    game.heal_tamagochi(idx)
                     output = "Питомец вылечен."
                 case "6":
                     game.play_with_tamagochi()
@@ -105,8 +115,8 @@ def main():
             output = "Пожалуйста, введите корректный номер."
         except (InvalidActionError, NotEnoughMoney) as e:
             output = str(e)
-        except GameOverError:
-            print("\n😿 Игра окончена: ваш питомец умер.")
+        except (GameOverError, TamagochiIsGone):
+            print("\n🪦 Игра окончена: ваш питомец умер.")
             break
 
 

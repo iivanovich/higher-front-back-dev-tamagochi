@@ -1,11 +1,15 @@
 class GameOverError(Exception):
-    pass
+    """Игра окончена: питомец умер или достигнуто условие проигрыша."""
+
 
 class InvalidActionError(Exception):
-    pass
+    """Недопустимое действие (например, покупка из пустого списка)."""
+
 
 class NotEnoughMoney(Exception):
-    pass
+    """Недостаточно монет для покупки."""
+
 
 class TamagochiIsGone(Exception):
-    pass
+    """Питомец недоступен (удалён или окончательно исчез)."""
+

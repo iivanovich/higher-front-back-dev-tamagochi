@@ -1,4 +1,3 @@
-# game/clicker.py
 import random
 from abc import ABC, abstractmethod
 

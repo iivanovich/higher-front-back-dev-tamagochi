@@ -1,4 +1,3 @@
-# game/constants.py
 
 MAX_HUNGER = 100
 MIN_HUNGER = 0
