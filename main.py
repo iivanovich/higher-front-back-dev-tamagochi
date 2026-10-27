@@ -78,16 +78,16 @@ def main():
                     income = game.work()
                     output = f"Вы заработали {income} монет."
                 case "2":
-                    game.buy_food()
+                    game.buy_food(allow_auto=False)
                     output = "Еда куплена."
                 case "3":
-                    game.buy_medicine()
+                    game.buy_medicine(allow_auto=False)
                     output = "Лекарство куплено."
                 case "4":
-                    game.feed_tamagochi()
+                    game.feed_tamagochi(allow_auto=False)
                     output = "Питомец покормлен."
                 case "5":
-                    game.heal_tamagochi()
+                    game.heal_tamagochi(allow_auto=False)
                     output = "Питомец вылечен."
                 case "6":
                     game.play_with_tamagochi()
