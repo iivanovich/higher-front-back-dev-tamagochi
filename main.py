@@ -78,8 +78,6 @@ def main():
                     income = game.work()
                     output = f"Вы заработали {income} монет."
                 case "2":
-                    # Для ручной игры можно добавить выбор по индексу, если хочешь.
-                    # Сейчас просто покупаем первую — чтобы было быстро.
                     game.buy_food()
                     output = "Еда куплена."
                 case "3":
@@ -105,7 +103,6 @@ def main():
 
         except (InvalidActionError, NotEnoughMoney) as e:
             output = str(e)
-
         except (GameOverError, TamagochiIsGone):
             print("\n💀 Игра окончена: ваш питомец умер.")
             break
