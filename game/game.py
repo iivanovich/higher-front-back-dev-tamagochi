@@ -165,15 +165,29 @@ class SimpleGame(AbstractGame):
     def feed_tamagochi(self, allow_auto: bool = True) -> None:
         """
         Кормит питомца.
-        allow_auto=True — тест берёт первую еду.
-        allow_auto=False — пользователь выбирает.
+        allow_auto=True — для тестов (если еды нет, сначала покупает одну порцию).
+        allow_auto=False — для ручного запуска (только кормит, без автопокупки).
         """
         self._ensure_alive()
+
+        if allow_auto and not self.inventory_food:
+            if self.all_food:
+                idx = 0
+                food_to_buy = self.all_food[idx]
+                if self.coins >= food_to_buy.price:
+                    self.coins -= food_to_buy.price
+                    from copy import (
+                        deepcopy,  # локальный импорт, чтобы не тащить наверх
+                    )
+                    self.inventory_food.append(deepcopy(food_to_buy))
+                else:
+                    raise NotEnoughMoney("Недостаточно монет для покупки еды в автотесте.")
+            else:
+                raise InvalidActionError("Нет доступной еды для покупки в автотесте.")
 
         if not self.inventory_food:
             raise InvalidActionError("Нет еды в инвентаре.")
 
-        # Для теста берём первую еду; для ручного — выбор
         if allow_auto:
             food = self.inventory_food.pop(0)
         else:
@@ -182,6 +196,7 @@ class SimpleGame(AbstractGame):
 
         self.tamagochi.feed(food)
         self.tamagochi.update()
+
 
     def heal_tamagochi(self, allow_auto: bool = True) -> None:
         """
