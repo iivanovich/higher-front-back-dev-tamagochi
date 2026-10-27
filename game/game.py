@@ -111,6 +111,7 @@ class SimpleGame(AbstractGame):
             raise NotEnoughMoney("Недостаточно монет.")
 
         self.coins -= food_to_buy.price
+        # Ключевое исправление: кладём в инвентарь КОПИЮ объекта, а не ссылку
         self.inventory_food.append(deepcopy(food_to_buy))
         self.tamagochi.update()
 
@@ -127,6 +128,7 @@ class SimpleGame(AbstractGame):
             raise NotEnoughMoney("Недостаточно монет.")
 
         self.coins -= med_to_buy.price
+        # То же самое для лекарств
         self.inventory_medicine.append(deepcopy(med_to_buy))
         self.tamagochi.update()
 
