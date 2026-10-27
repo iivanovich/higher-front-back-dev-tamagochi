@@ -16,6 +16,7 @@ STATUS_TEMPLATE = (
     "энергия {energy}, монеты {coins}\n"
 )
 
+
 def main():
     all_food = [
         Food(name="Бургер", satiety=20, price=40),
@@ -51,12 +52,7 @@ def main():
         print(f"Сумка с едой: {[f.name for f in game.food]}")
         print(f"Сумка с лекарствами: {[m.name for m in game.medicine]}")
 
-        try:
-            status = game.get_status()
-        except (GameOverError, TamagochiIsGone):
-            print("\n🪦 Игра окончена: ваш питомец умер.")
-            break
-
+        status = game.get_status()
         print(STATUS_TEMPLATE.format(**status))
 
         if tamagochi.is_sick():
@@ -82,40 +78,46 @@ def main():
                 case "1":
                     income = game.work()
                     output = f"Вы заработали {income} монет."
+                    # update уже внутри game.work(), больше не вызываем tamagochi.update() здесь
+
                 case "2":
-                    idx = int(input("Введите индекс еды для покупки: "))
-                    game.buy_food(idx)
+                    game.buy_food()
                     output = "Еда куплена."
+
                 case "3":
-                    idx = int(input("Введите индекс лекарства для покупки: "))
-                    game.buy_medicine(idx)
+                    game.buy_medicine()
                     output = "Лекарство куплено."
+
                 case "4":
-                    idx = int(input("Введите индекс еды для кормления: "))
-                    game.feed_tamagochi(idx)
+                    game.feed_tamagochi()
                     output = "Питомец покормлен."
+
                 case "5":
-                    idx = int(input("Введите индекс лекарства для лечения: "))
-                    game.heal_tamagochi(idx)
+                    game.heal_tamagochi()
                     output = "Питомец вылечен."
+
                 case "6":
                     game.play_with_tamagochi()
                     output = "Вы поиграли с питомцем."
+
                 case "7":
                     game.rest_tamagochi()
                     output = "Питомец отдохнул."
+
                 case "0":
                     print("До свидания!")
                     return
+
                 case _:
                     output = "Неверный выбор, попробуйте снова."
-        except ValueError:
-            output = "Пожалуйста, введите корректный номер."
+
         except (InvalidActionError, NotEnoughMoney) as e:
             output = str(e)
+
         except (GameOverError, TamagochiIsGone):
-            print("\n🪦 Игра окончена: ваш питомец умер.")
+            print("\n💀 Игра окончена: ваш питомец умер.")
             break
+
 
 if __name__ == "__main__":
     main()
