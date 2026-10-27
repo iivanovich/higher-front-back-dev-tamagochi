@@ -25,20 +25,20 @@ class AbstractGame(ABC):
         """Выполняет действие «работа»: получает монеты и обновляет состояние питомца."""
 
     @abstractmethod
-    def buy_food(self) -> None:
-        """Покупает еду (автоматически выбирает первый доступный товар)."""
+    def buy_food(self, index: int) -> None:
+        """Покупает еду по индексу из каталога магазина."""
 
     @abstractmethod
-    def buy_medicine(self) -> None:
-        """Покупает лекарство (автоматически выбирает первый доступный товар)."""
+    def buy_medicine(self, index: int) -> None:
+        """Покупает лекарство по индексу из каталога магазина."""
 
     @abstractmethod
-    def feed_tamagochi(self) -> None:
-        """Кормит питомца (автоматически использует первый предмет из инвентаря)."""
+    def feed_tamagochi(self, index: int) -> None:
+        """Кормит питомца едой по индексу из инвентаря игрока."""
 
     @abstractmethod
-    def heal_tamagochi(self) -> None:
-        """Лечит питомца (автоматически использует первый предмет из инвентаря)."""
+    def heal_tamagochi(self, index: int) -> None:
+        """Лечит питомца лекарством по индексу из инвентаря игрока."""
 
     @abstractmethod
     def rest_tamagochi(self) -> None:
@@ -50,21 +50,21 @@ class AbstractGame(ABC):
 
     @abstractmethod
     def get_status(self) -> dict[str, int]:
-        """Возвращает словарь со статусом игры."""
+        """Возвращает словарь со статусом игры: показатели питомца и количество монет."""
 
     @property
     @abstractmethod
     def food(self) -> list[Food]:
-        """Возвращает список еды в инвентаре."""
+        """Возвращает список еды в инвентаре игрока (копию)."""
 
     @property
     @abstractmethod
     def medicine(self) -> list[Medicine]:
-        """Возвращает список лекарств в инвентаре."""
+        """Возвращает список лекарств в инвентаре игрока (копию)."""
 
 
 class SimpleGame(AbstractGame):
-    """Конкретная реализация игры."""
+    """Конкретная реализация игры: управление ресурсами и действиями питомца."""
 
     START_COINS = 100
 
@@ -95,14 +95,16 @@ class SimpleGame(AbstractGame):
         self._tamagochi.update()
         return income
 
-    def buy_food(self) -> None:
-        """Покупает первый доступный предмет из каталога."""
+    def buy_food(self, index: int) -> None:
         self._ensure_alive()
 
         if not self._all_food:
             raise InvalidActionError("Нет доступной еды для покупки.")
 
-        food_to_buy = self._all_food[0]  # Берём первый предмет
+        if index < 0 or index >= len(self._all_food):
+            raise InvalidActionError("Некорректный индекс товара.")
+
+        food_to_buy = self._all_food[index]
 
         if self._coins < food_to_buy.price:
             raise NotEnoughMoney("Недостаточно монет.")
@@ -111,14 +113,16 @@ class SimpleGame(AbstractGame):
         self._inventory_food.append(deepcopy(food_to_buy))
         self._tamagochi.update()
 
-    def buy_medicine(self) -> None:
-        """Покупает первое доступное лекарство из каталога."""
+    def buy_medicine(self, index: int) -> None:
         self._ensure_alive()
 
         if not self._all_medicine:
             raise InvalidActionError("Нет доступных лекарств для покупки.")
 
-        med_to_buy = self._all_medicine[0]  # Берём первое лекарство
+        if index < 0 or index >= len(self._all_medicine):
+            raise InvalidActionError("Некорректный индекс товара.")
+
+        med_to_buy = self._all_medicine[index]
 
         if self._coins < med_to_buy.price:
             raise NotEnoughMoney("Недостаточно монет.")
@@ -127,41 +131,32 @@ class SimpleGame(AbstractGame):
         self._inventory_medicine.append(deepcopy(med_to_buy))
         self._tamagochi.update()
 
-    def feed_tamagochi(self) -> None:
-        """Кормит питомца первым предметом из инвентаря."""
+    def feed_tamagochi(self, index: int) -> None:
         self._ensure_alive()
 
         if not self._inventory_food:
             raise InvalidActionError("Нет еды в инвентаре.")
 
-        food = self._inventory_food.pop(0)  # Удаляем и берём первый предмет
+        if index < 0 or index >= len(self._inventory_food):
+            raise InvalidActionError("Некорректный индекс еды в инвентаре.")
+
+        food = self._inventory_food.pop(index)
         self._tamagochi.feed(food)
         self._tamagochi.update()
 
-    def heal_tamagochi(self) -> None:
-        """Лечит питомца первым предметом из инвентаря."""
+    def heal_tamagochi(self, index: int) -> None:
         self._ensure_alive()
 
         if not self._inventory_medicine:
             raise InvalidActionError("Нет лекарств в инвентаре.")
 
-        medicine = self._inventory_medicine[0]
+        if index < 0 or index >= len(self._inventory_medicine):
+            raise InvalidActionError("Некорректный индекс лекарства в инвентаре.")
+
+        medicine = self._inventory_medicine[index]
 
         if medicine.is_empty():
-            # Если первое лекарство пустое, пробуем найти непустое
-            found = None
-            for i, med in enumerate(self._inventory_medicine):
-                if not med.is_empty():
-                    found = i
-                    break
-            
-            if found is None:
-                raise InvalidActionError("Все лекарства закончились.")
-            
-            medicine = self._inventory_medicine.pop(found)
-        else:
-            # Просто берём первое, если оно не пустое
-            self._inventory_medicine.pop(0)
+            raise InvalidActionError("Выбранное лекарство закончилось.")
 
         self._tamagochi.heal(medicine)
         self._tamagochi.update()
