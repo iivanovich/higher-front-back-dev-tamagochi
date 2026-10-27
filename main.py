@@ -16,7 +16,6 @@ STATUS_TEMPLATE = (
     "энергия {energy}, монеты {coins}\n"
 )
 
-
 def main():
     all_food = [
         Food(name="Бургер", satiety=20, price=40),
@@ -83,7 +82,6 @@ def main():
                 case "1":
                     income = game.work()
                     output = f"Вы заработали {income} монет."
-                    # Логика обновления питомца перенесена внутрь game.work() и других методов
                 case "2":
                     idx = int(input("Введите индекс еды для покупки: "))
                     game.buy_food(idx)
@@ -118,7 +116,6 @@ def main():
         except (GameOverError, TamagochiIsGone):
             print("\n🪦 Игра окончена: ваш питомец умер.")
             break
-
 
 if __name__ == "__main__":
     main()
