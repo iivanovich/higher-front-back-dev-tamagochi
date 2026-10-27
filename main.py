@@ -16,7 +16,6 @@ STATUS_TEMPLATE = (
     "энергия {energy}, монеты {coins}\n"
 )
 
-
 def main():
     all_food = [
         Food(name="Бургер", satiety=20, price=40),
@@ -78,36 +77,27 @@ def main():
                 case "1":
                     income = game.work()
                     output = f"Вы заработали {income} монет."
-                    # update уже внутри game.work(), больше не вызываем tamagochi.update() здесь
-
                 case "2":
                     game.buy_food()
                     output = "Еда куплена."
-
                 case "3":
                     game.buy_medicine()
                     output = "Лекарство куплено."
-
                 case "4":
                     game.feed_tamagochi()
                     output = "Питомец покормлен."
-
                 case "5":
                     game.heal_tamagochi()
                     output = "Питомец вылечен."
-
                 case "6":
                     game.play_with_tamagochi()
                     output = "Вы поиграли с питомцем."
-
                 case "7":
                     game.rest_tamagochi()
                     output = "Питомец отдохнул."
-
                 case "0":
                     print("До свидания!")
                     return
-
                 case _:
                     output = "Неверный выбор, попробуйте снова."
 
@@ -117,7 +107,6 @@ def main():
         except (GameOverError, TamagochiIsGone):
             print("\n💀 Игра окончена: ваш питомец умер.")
             break
-
 
 if __name__ == "__main__":
     main()
