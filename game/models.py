@@ -5,14 +5,7 @@ from .exceptions import InvalidActionError
 
 @dataclass
 class Food:
-    """
-    Описывает еду для питомца.
-
-    Атрибуты:
-        name (str): название еды.
-        satiety (int): количество, на которое уменьшается голод после поедания.
-        price (int): стоимость порции еды.
-    """
+    """Модель еды."""
     name: str
     satiety: int
     price: int
@@ -22,17 +15,7 @@ class Food:
 
 @dataclass
 class Medicine:
-    """
-    Описывает лекарство для питомца.
-
-    Атрибуты:
-        name (str): название лекарства.
-        price (int): стоимость.
-        heal_hp (int): сколько здоровья лечит за один приём.
-        number_of_uses (int): сколько раз можно использовать.
-        uses (int): сколько раз уже было использовано (по умолчанию 0).
-    """
-
+    """Модель лекарства."""
     name: str
     price: int
     heal_hp: int
@@ -40,11 +23,11 @@ class Medicine:
     uses: int = field(default=0)
 
     def is_empty(self) -> bool:
-        """Возвращает True, если лекарство больше нельзя использовать."""
+        """Проверяет, закончились ли использования лекарства."""
         return self.uses >= self.number_of_uses
 
     def use(self) -> None:
-        """Использовать лекарство (увеличить счётчик использований), иначе выбросить ошибку."""
+        """Увеличивает счётчик использований. Вызывает ошибку, если лекарство закончилось."""
         if self.is_empty():
             raise InvalidActionError("Лекарство закончилось.")
         self.uses += 1

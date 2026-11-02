@@ -1,5 +1,3 @@
-# main.py
-
 import os
 
 from game.clicker import SimpleRandomClicker
@@ -13,8 +11,10 @@ from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
 
+WELCOME_TEXT = "Добро пожаловать в игру Тамагочи-кликер!"
 
 def main():
+    """Запуск текстового интерфейса для игры в Тамагочи-кликера."""
     all_food = [
         Food(name="Яблоко", satiety=20, price=40),
         Food(name="Банан", satiety=10, price=20),
@@ -38,7 +38,7 @@ def main():
         all_medicine=all_medicine,
     )
 
-    print("Добро пожаловать в игру Тамагочи-кликер!")
+    print(WELCOME_TEXT)
     output = ""
 
     while True:
