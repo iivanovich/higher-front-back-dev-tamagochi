@@ -101,7 +101,7 @@ class SimpleGame(AbstractGame):
         if self.coins < food_to_buy.price:
             raise NotEnoughMoney("Недостаточно монет.")
         self.coins -= food_to_buy.price
-        self.inventory_food.append(food_to_buy)
+        self.inventory_food.append(self.all_food[0])
 
     def buy_medicine(self) -> None:
         """Покупает одно лекарство из списка доступных (первое)."""
@@ -115,7 +115,7 @@ class SimpleGame(AbstractGame):
         self.inventory_medicine.append(med_to_buy)
 
     def feed_tamagochi(self) -> None:
-        """Кормит питомца из инвентаря (первой едой)."""
+        """Кормит питомца из инвентаря — передаёт первую еду и удаляет только её."""
         self._ensure_alive()
         if not self.inventory_food:
             raise InvalidActionError("Нет еды в инвентаре.")
