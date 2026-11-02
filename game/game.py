@@ -191,7 +191,7 @@ class SimpleGame(AbstractGame):
                 self._pick(self._store_food, _merge(item, index, name), 'еды')
             ]
             self._pay(food.price)
-            self._bag_food.append(food)
+            self._bag_food.append(_copy_food(food))
             print(f'Куплено: {food.name}')
         except GameError as error:
             print(f'Не удалось купить: {error}')
@@ -220,7 +220,7 @@ class SimpleGame(AbstractGame):
                 )
             ]
             self._pay(medicine.price)
-            self._bag_medicine.append(medicine)
+            self._bag_medicine.append(_copy_medicine(medicine))
             print(f'Куплено: {medicine.name}')
         except GameError as error:
             print(f'Не удалось купить: {error}')
@@ -416,6 +416,32 @@ class SimpleGame(AbstractGame):
                 if candidate.name == target:
                     return number
         raise InvalidChoice(f'Такого предмета нет среди {what}')
+
+
+def _copy_food(food: Food) -> Food:
+    """Создать отдельную порцию еды для сумки игрока.
+
+    Каждая купленная порция — самостоятельный объект, поэтому кормление
+    одной из них не задевает остальные, даже если это та же еда из магазина.
+
+    :param food: товар из ассортимента магазина.
+    :return: новая порция с теми же характеристиками.
+    """
+    return Food(name=food.name, satiety=food.satiety, price=food.price)
+
+
+def _copy_medicine(medicine: Medicine) -> Medicine:
+    """Создать отдельную упаковку лекарства для сумки игрока.
+
+    :param medicine: товар из ассортимента магазина.
+    :return: новая упаковка с полным запасом использований.
+    """
+    return Medicine(
+        name=medicine.name,
+        price=medicine.price,
+        heal_hp=medicine.heal_hp,
+        number_of_uses=medicine.number_of_uses,
+    )
 
 
 def _income(clicker: AbstractClicker) -> int:
