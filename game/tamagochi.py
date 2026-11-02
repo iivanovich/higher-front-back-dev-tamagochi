@@ -22,11 +22,11 @@ class AbstractTamagochi(ABC):
 
     @abstractmethod
     def play(self) -> None:
-        """Игра с питомцем."""
+        """Играет с питомцем."""
 
     @abstractmethod
     def rest(self) -> None:
-        """Питомец отдыхает."""
+        """Позволяет питомцу отдохнуть."""
 
     @abstractmethod
     def heal(self, medicine: Medicine) -> None:
@@ -34,15 +34,15 @@ class AbstractTamagochi(ABC):
 
     @abstractmethod
     def status(self) -> dict[str, int]:
-        """Статус питомца."""
+        """Возвращает текущие показатели питомца."""
 
     @abstractmethod
     def is_alive(self) -> bool:
-        """Жив ли питомец?"""
+        """Питомец жив?"""
 
     @abstractmethod
     def is_sick(self) -> bool:
-        """Болен ли питомец?"""
+        """Питомец болен?"""
 
     @abstractmethod
     def update(self) -> None:
@@ -53,7 +53,7 @@ class SimpleTamagochi(AbstractTamagochi):
 
     def __init__(self, name: str = "Питомец") -> None:
         self._name = name
-        self._hunger = 50
+        self._hunger = 50  # Значения контролируем константами (см. правку ниже)
         self._hp = MAX_HP
         self._energy = MAX_ENERGY
         self._fatigue = 0
@@ -65,6 +65,7 @@ class SimpleTamagochi(AbstractTamagochi):
         return max(min_val, min(value, max_val))
 
     def feed(self, food: Food) -> None:
+        """Кормит питомца. Если питомец болен, сытость восстанавливается наполовину."""
         if not self.is_alive():
             raise TamagochiIsGone("Питомец умер, кормить нельзя.")
         if self._sick:
@@ -74,6 +75,7 @@ class SimpleTamagochi(AbstractTamagochi):
         self._energy = self._clamp(self._energy - 10, MIN_ENERGY, MAX_ENERGY)
 
     def play(self) -> None:
+        """Игра с питомцем: тратит энергию, повышает голод и усталость."""
         if not self.is_alive():
             raise TamagochiIsGone("Питомец умер, играть нельзя.")
         self._energy = self._clamp(self._energy - 15, MIN_ENERGY, MAX_ENERGY)
@@ -81,6 +83,7 @@ class SimpleTamagochi(AbstractTamagochi):
         self._fatigue = self._clamp(self._fatigue + 20, MIN_FATIGUE, MAX_FATIGUE)
 
     def rest(self) -> None:
+        """Позволяет питомцу отдохнуть и восстановить энергию, снизить усталость."""
         if not self.is_alive():
             raise TamagochiIsGone("Питомец умер, отдых невозможен.")
         recovery = 15 if self._sick else 30
@@ -89,6 +92,7 @@ class SimpleTamagochi(AbstractTamagochi):
         self._fatigue = self._clamp(self._fatigue - fatigue_reduction, MIN_FATIGUE, MAX_FATIGUE)
 
     def heal(self, medicine: Medicine) -> None:
+        """Лечит питомца с помощью лекарства."""
         if not self.is_alive():
             raise TamagochiIsGone("Питомец умер, лечение невозможно.")
         if medicine.is_empty():
@@ -98,6 +102,7 @@ class SimpleTamagochi(AbstractTamagochi):
         self._sick = False
 
     def status(self) -> dict[str, int]:
+        """Возвращает текущие показатели питомца."""
         return {
             "hunger": self._hunger,
             "hp": self._hp,
@@ -115,15 +120,23 @@ class SimpleTamagochi(AbstractTamagochi):
         self._sick = sick
 
     def update(self) -> None:
+        """
+        Обновляет состояние питомца каждый тик.
+        Вызывает TamagochiIsGone, если питомец умирает.
+        """
         if not self._is_alive:
-            return
+            raise TamagochiIsGone("Питомец умер.")
+
         self._hunger = self._clamp(self._hunger + 5, MIN_HUNGER, MAX_HUNGER)
         self._energy = self._clamp(self._energy - 5, MIN_ENERGY, MAX_ENERGY)
         self._fatigue = self._clamp(self._fatigue + 3, MIN_FATIGUE, MAX_FATIGUE)
+
         if not self._sick and (self._fatigue > 80 or self._hp < 40) and random.random() < 0.3:
             self._sick = True
+
         if self._sick:
             self._hp = self._clamp(self._hp - 3, MIN_HP, MAX_HP)
+
         if self._hp <= 0:
             self._is_alive = False
             raise TamagochiIsGone("Питомец умер.")

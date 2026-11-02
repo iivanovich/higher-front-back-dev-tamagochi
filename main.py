@@ -38,6 +38,9 @@ def main():
 
     print("Добро пожаловать в игру Тамагочи-кликер!")
     output = ""
+    STATUS_TEMPLATE = (
+        "\nГолод: {hunger}, Здоровье: {hp}, Энергия: {energy}, Монеты: {coins}\n"
+    )
 
     while True:
         os.system("clear" if os.name != "nt" else "cls")
@@ -47,16 +50,8 @@ def main():
         print(f"Еда в инвентаре: {[f.name for f in game.food]}")
         print(f"Лекарства в инвентаре: {[m.name for m in game.medicine]}")
 
-        try:
-            status = game.get_status()
-        except GameOverError:
-            print("\nИгра окончена: ваш питомец погиб.")
-            break
-
-        print(
-            f"\nГолод: {status['hunger']}, Здоровье: {status['hp']}, "
-            f"Энергия: {status['energy']}, Монеты: {status['coins']}\n"
-        )
+        status = game.get_status()
+        print(STATUS_TEMPLATE.format(**status))
 
         if tamagochi.is_sick():
             print("======= Питомец болен! =======")
@@ -108,6 +103,7 @@ def main():
                     return
                 case _:
                     output = "Некорректный выбор меню."
+
         except (InvalidActionError, NotEnoughMoney) as e:
             output = str(e)
         except (GameOverError, TamagochiIsGone):
