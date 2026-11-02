@@ -165,15 +165,16 @@ class SimpleGame(AbstractGame):
 
     def feed_tamagochi(self, idx: int = 0) -> None:
         """
-        Кормит питомца едой из инвентаря по индексу.
+        Кормит питомца конкретной едой из инвентаря по индексу.
         """
         self._ensure_alive()
         if not self._inventory_food:
             raise InvalidActionError("Нет еды в инвентаре.")
         if not 0 <= idx < len(self._inventory_food):
             raise InvalidActionError("Некорректный выбор еды для кормления.")
-        food = self._inventory_food.pop(idx)
+        food = self._inventory_food[idx]
         self.tamagochi.feed(food)
+        del self._inventory_food[idx]
         self.tamagochi.update()
 
     def heal_tamagochi(self, idx: int = 0) -> None:
