@@ -7,6 +7,45 @@ from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
 
+# Подписи и данные читаются из модуля констант с запасными значениями,
+# чтобы игра запускалась даже с устаревшей версией constants.py.
+WELCOME_MESSAGE = getattr(
+    constants, 'WELCOME_MESSAGE', 'Добро пожаловать в тамагочи-кликер!'
+)
+DEAD_TAMAGOCHI_MESSAGE = getattr(
+    constants, 'DEAD_TAMAGOCHI_MESSAGE', 'Питомец погиб. Игра окончена.'
+)
+SICK_WARNING = getattr(
+    constants,
+    'SICK_WARNING',
+    '=======Тамагочи болеет=======\n'
+    '=======Отдых действует менее эффективно=======',
+)
+WRONG_COMMAND_MESSAGE = getattr(constants, 'WRONG_COMMAND_MESSAGE', 'Неверная команда')
+DEFAULT_NAME = getattr(constants, 'DEFAULT_NAME', 'Кот')
+MENU = getattr(
+    constants,
+    'MENU',
+    {
+        '1': 'Пойти на работу',
+        '2': 'Купить еду',
+        '3': 'Купить лекарство',
+        '4': 'Покормить',
+        '5': 'Вылечить',
+        '6': 'Играть',
+        '7': 'Отдых',
+        '0': 'Выход',
+    },
+)
+DEFAULT_FOOD = getattr(
+    constants,
+    'DEFAULT_FOOD',
+    (('Бургер', 20, 40), ('Салат', 10, 20), ('Яблоко', 10, 15)),
+)
+DEFAULT_MEDICINE = getattr(
+    constants, 'DEFAULT_MEDICINE', (('Ибупрофен', 30, 20, 2),)
+)
+
 
 def build_game() -> SimpleGame:
     """Собрать игру с ассортиментом магазина по умолчанию.
@@ -15,7 +54,7 @@ def build_game() -> SimpleGame:
     """
     all_food = [
         Food(name=name, satiety=satiety, price=price)
-        for name, satiety, price in constants.DEFAULT_FOOD
+        for name, satiety, price in DEFAULT_FOOD
     ]
 
     all_medicine = [
@@ -25,15 +64,12 @@ def build_game() -> SimpleGame:
             heal_hp=heal_hp,
             number_of_uses=number_of_uses,
         )
-        for name, price, heal_hp, number_of_uses in constants.DEFAULT_MEDICINE
+        for name, price, heal_hp, number_of_uses in DEFAULT_MEDICINE
     ]
 
     return SimpleGame(
-        SimpleTamagochi(constants.DEFAULT_NAME),
-        SimpleRandomClicker(
-            constants.DEFAULT_MIN_INCOME,
-            constants.DEFAULT_MAX_INCOME,
-        ),
+        SimpleTamagochi(DEFAULT_NAME),
+        SimpleRandomClicker(),
         all_food=all_food,
         all_medicine=all_medicine,
     )
@@ -41,7 +77,7 @@ def build_game() -> SimpleGame:
 
 def print_menu() -> None:
     """Вывести меню доступных действий."""
-    for code, title in constants.MENU.items():
+    for code, title in MENU.items():
         print(f'{code}. {title}')
 
 
@@ -49,7 +85,7 @@ def main() -> None:
     """Запустить консольную игру «Тамагочи-кликер»."""
     game = build_game()
 
-    print(constants.WELCOME_MESSAGE)
+    print(WELCOME_MESSAGE)
     output = ''
 
     while True:
@@ -64,9 +100,9 @@ def main() -> None:
             f"энергия {status['energy']}, монет {status['coins']}\n"
         )
         if game.tamagochi.is_sick():
-            print(constants.SICK_WARNING)
+            print(SICK_WARNING)
         if not game.tamagochi.is_alive():
-            print(constants.DEAD_TAMAGOCHI_MESSAGE)
+            print(DEAD_TAMAGOCHI_MESSAGE)
             break
 
         print_menu()
@@ -76,7 +112,7 @@ def main() -> None:
         except (EOFError, KeyboardInterrupt):
             break
 
-        match choice:
+        match choice.strip():
             case '1':
                 income = game.work()
                 output = f'Вы заработали {income} монет'
@@ -100,7 +136,7 @@ def main() -> None:
             case '0':
                 break
             case _:
-                output = constants.WRONG_COMMAND_MESSAGE
+                output = WRONG_COMMAND_MESSAGE
 
         os.system('clear')
 

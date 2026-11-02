@@ -9,21 +9,14 @@ from abc import ABC, abstractmethod
 
 from game import constants
 
-
-class Income(int):
-    """Целое число дохода, которое можно ещё и вызвать.
-
-    Позволяет обращаться к доходу одинаково — и как к свойству
-    (``clicker.income_per_click``), и как к методу
-    (``clicker.income_per_click()``).
-    """
-
-    def __call__(self) -> int:
-        """Вернуть доход при обращении в стиле метода.
-
-        :return: значение дохода.
-        """
-        return int(self)
+# Настройки читаются из модуля констант, но имеют запасные значения:
+# игра должна работать даже с устаревшей версией constants.py.
+START_COINS = getattr(constants, 'START_COINS', 0)
+DEFAULT_MIN_INCOME = getattr(constants, 'DEFAULT_MIN_INCOME', 10)
+DEFAULT_MAX_INCOME = getattr(constants, 'DEFAULT_MAX_INCOME', 20)
+DEFAULT_FIXED_INCOME = getattr(constants, 'DEFAULT_FIXED_INCOME', 10)
+CLICK_BONUS_EVERY = getattr(constants, 'CLICK_BONUS_EVERY', 10)
+CLICK_BONUS_MULTIPLIER = getattr(constants, 'CLICK_BONUS_MULTIPLIER', 3)
 
 
 class AbstractClicker(ABC):
@@ -43,16 +36,12 @@ class AbstractClicker(ABC):
 
 
 class SimpleRandomClicker(AbstractClicker):
-    """Кликер со случайным доходом в заданном диапазоне.
-
-    Каждый клик приносит от ``min_income`` до ``max_income`` монет.
-    Каждый :data:`constants.CLICK_BONUS_EVERY`-й клик даёт бонусный доход.
-    """
+    """Кликер со случайным доходом в заданном диапазоне."""
 
     def __init__(
         self,
-        min_income: int = constants.DEFAULT_MIN_INCOME,
-        max_income: int = constants.DEFAULT_MAX_INCOME,
+        min_income: int = DEFAULT_MIN_INCOME,
+        max_income: int = DEFAULT_MAX_INCOME,
     ) -> None:
         """Создать кликер.
 
@@ -65,15 +54,15 @@ class SimpleRandomClicker(AbstractClicker):
         self._min_income = min_income
         self._max_income = max_income
         self._income_per_click = min_income
-        self._coins = constants.START_COINS
+        self._coins = START_COINS
         self._clicks = 0
 
     def click(self) -> None:
         """Сделать клик: начислить случайный доход и бонус каждый N-й клик."""
         income = random.randint(self._min_income, self._max_income)
         self._clicks += 1
-        if self._clicks % constants.CLICK_BONUS_EVERY == 0:
-            income *= constants.CLICK_BONUS_MULTIPLIER
+        if self._clicks % CLICK_BONUS_EVERY == 0:
+            income *= CLICK_BONUS_MULTIPLIER
         self._income_per_click = income
 
     def income_per_click(self) -> int:
@@ -81,7 +70,7 @@ class SimpleRandomClicker(AbstractClicker):
 
         :return: количество монет за последний клик.
         """
-        return Income(self._income_per_click)
+        return self._income_per_click
 
     @property
     def coins(self) -> int:
@@ -98,7 +87,7 @@ class SimpleClicker(AbstractClicker):
 
     def __init__(
         self,
-        income_per_click: int = constants.DEFAULT_FIXED_INCOME,
+        income_per_click: int = DEFAULT_FIXED_INCOME,
     ) -> None:
         """Создать кликер.
 
@@ -108,7 +97,7 @@ class SimpleClicker(AbstractClicker):
         if income_per_click <= 0:
             raise ValueError('Доход за клик должен быть положительным')
         self._income_per_click = income_per_click
-        self._coins = constants.START_COINS
+        self._coins = START_COINS
 
     def click(self) -> None:
         """Сделать клик и начислить монеты."""
@@ -119,7 +108,7 @@ class SimpleClicker(AbstractClicker):
 
         :return: количество монет за клик.
         """
-        return Income(self._income_per_click)
+        return self._income_per_click
 
     @property
     def coins(self) -> int:

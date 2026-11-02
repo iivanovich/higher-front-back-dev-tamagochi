@@ -18,6 +18,14 @@ from game.exceptions import (
 from game.models import Food, Inventory, Medicine, Status
 from game.tamagochi import AbstractTamagochi
 
+# Настройки читаются из модуля констант, но имеют запасные значения:
+# игра должна запускаться даже с устаревшей версией constants.py.
+START_COINS = getattr(constants, 'START_COINS', 0)
+START_GAME_COINS = getattr(constants, 'START_GAME_COINS', 200)
+GAME_OVER_MESSAGE = getattr(
+    constants, 'GAME_OVER_MESSAGE', 'Игра окончена: питомец погиб'
+)
+
 # Любой способ указать предмет: номер, название или сам объект.
 ItemChoice = int | str | Food | Medicine | None
 
@@ -110,7 +118,7 @@ class SimpleGame(AbstractGame):
         self._store_medicine = list(all_medicine or [])
         self._bag_food = Inventory()
         self._bag_medicine = Inventory()
-        self._coins = constants.START_GAME_COINS
+        self._coins = START_GAME_COINS
         self._is_over = False
 
     @property
@@ -157,9 +165,10 @@ class SimpleGame(AbstractGame):
         :return: сколько монет заработано за клик.
         """
         if not self._check_alive():
-            return constants.START_COINS
+            return START_COINS
         self._clicker.click()
-        income = int(self._clicker.income_per_click())
+        income = self._clicker.income_per_click()
+        income = int(income() if callable(income) else income)
         self._coins += income
         return income
 
@@ -299,7 +308,6 @@ class SimpleGame(AbstractGame):
         status = Status(self._tamagochi.status())
         status['coins'] = self._coins
         status['game_over'] = int(self.is_over())
-        status['is_over'] = int(self.is_over())
         return status
 
     def is_alive(self) -> bool:
@@ -332,7 +340,7 @@ class SimpleGame(AbstractGame):
         :return: ``True``, если действия доступны.
         """
         if self.is_over():
-            print(constants.GAME_OVER_MESSAGE)
+            print(GAME_OVER_MESSAGE)
             return False
         return True
 
@@ -369,7 +377,7 @@ class SimpleGame(AbstractGame):
         if not items:
             raise EmptyInventory(f'Нет доступной {what}')
         if item is None:
-            return constants.START_COINS
+            return START_COINS
         if isinstance(item, int):
             if not -len(items) <= item < len(items):
                 raise InvalidChoice(f'Нет предмета с номером {item}')
