@@ -47,7 +47,7 @@ class AbstractGame(ABC):
         pass
 
     @abstractmethod
-    def get_status(self) -> dict[str, int]:
+    def get_status(self) -> dict:
         pass
 
     @property
@@ -61,28 +61,26 @@ class AbstractGame(ABC):
         pass
 
 class SimpleGame(AbstractGame):
-    """Основная логика игры: управление ресурсами и действиями."""
-
     def __init__(
         self,
-        tamagochi: AbstractTamagochi,
-        clicker: AbstractClicker,
-        all_food: list[Food],
-        all_medicine: list[Medicine],
-    ) -> None:
+        tamagochi,
+        clicker,
+        all_food,
+        all_medicine,
+    ):
         self._tamagochi = tamagochi
         self._clicker = clicker
         self._all_food = list(all_food)
         self._all_medicine = list(all_medicine)
         self._coins = START_COINS
-        self._inventory_food: list[Food] = []
-        self._inventory_medicine: list[Medicine] = []
+        self._inventory_food = []
+        self._inventory_medicine = []
 
     @property
     def tamagochi(self):
         return self._tamagochi
 
-    def _ensure_alive(self) -> None:
+    def _ensure_alive(self):
         if not self._tamagochi.is_alive():
             raise GameOverError("Игра окончена.")
 
@@ -162,15 +160,15 @@ class SimpleGame(AbstractGame):
         self._tamagochi.play()
         self._tamagochi.update()
 
-    def get_status(self) -> dict[str, int]:
+    def get_status(self) -> dict:
         status = self._tamagochi.status()
-        status["coins"] = self._coins
+        status['coins'] = self._coins
         return status
 
     @property
-    def food(self) -> list[Food]:
+    def food(self):
         return list(self._inventory_food)
 
     @property
-    def medicine(self) -> list[Medicine]:
+    def medicine(self):
         return list(self._inventory_medicine)

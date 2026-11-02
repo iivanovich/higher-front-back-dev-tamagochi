@@ -20,7 +20,6 @@ def main():
         Food(name="Булочка", satiety=8, price=12),
         Food(name="Пирожок", satiety=15, price=25),
     ]
-
     all_medicine = [
         Medicine(name="Антибиотик", price=30, heal_hp=20, number_of_uses=2),
         Medicine(name="Витамин C", price=25, heal_hp=10, number_of_uses=3),
@@ -103,7 +102,6 @@ def main():
                     return
                 case _:
                     output = "Некорректный выбор меню."
-
         except (InvalidActionError, NotEnoughMoney) as e:
             output = str(e)
         except (GameOverError, TamagochiIsGone):
