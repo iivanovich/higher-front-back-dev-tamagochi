@@ -1,3 +1,10 @@
+"""Сущность игры: связывает питомца, кликер и ресурсы.
+
+Класс игры знает только контракты компонентов. Что именно происходит
+внутри ``click`` или ``feed`` — его не касается: он отдаёт команды, ведёт
+кошелёк и следит за состоянием партии.
+"""
+
 from abc import ABC, abstractmethod
 
 from game import constants
@@ -11,39 +18,86 @@ from game.exceptions import (
 from game.models import Food, Inventory, Medicine, Status
 from game.tamagochi import AbstractTamagochi
 
+# Настройки читаются из модуля констант, но имеют запасные значения:
+# игра должна запускаться даже с устаревшей версией constants.py.
 START_COINS = getattr(constants, 'START_COINS', 0)
 START_GAME_COINS = getattr(constants, 'START_GAME_COINS', 200)
 GAME_OVER_MESSAGE = getattr(
     constants, 'GAME_OVER_MESSAGE', 'Игра окончена: питомец погиб'
 )
 
+# Любой способ указать предмет: номер, название или сам объект.
 ItemChoice = int | str | Food | Medicine | None
 
+
 class AbstractGame(ABC):
+    """Интерфейс игры."""
+
     @abstractmethod
-    def __init__(self, tamagochi, clicker, all_food, all_medicine): ...
+    def __init__(
+        self,
+        tamagochi: AbstractTamagochi,
+        clicker: AbstractClicker,
+        all_food: list[Food],
+        all_medicine: list[Medicine],
+    ) -> None:
+        """Инициализировать игру.
+
+        :param tamagochi: питомец.
+        :param clicker: кликер, выдающий монеты.
+        :param all_food: доступный в магазине ассортимент еды.
+        :param all_medicine: доступный в магазине ассортимент лекарств.
+        """
+
     @abstractmethod
-    def work(self) -> int: ...
+    def work(self) -> int:
+        """Пойти на работу: заработать монеты кликом."""
+
     @abstractmethod
-    def buy_food(self) -> None: ...
+    def buy_food(self) -> None:
+        """Купить еду."""
+
     @abstractmethod
-    def buy_medicine(self) -> None: ...
+    def buy_medicine(self) -> None:
+        """Купить лекарство."""
+
     @abstractmethod
-    def feed_tamagochi(self) -> None: ...
+    def feed_tamagochi(self) -> None:
+        """Покормить питомца едой из сумки."""
+
     @abstractmethod
-    def heal_tamagochi(self) -> None: ...
+    def heal_tamagochi(self) -> None:
+        """Вылечить питомца лекарством из сумки."""
+
     @abstractmethod
-    def rest_tamagochi(self) -> None: ...
+    def rest_tamagochi(self) -> None:
+        """Дать питомцу отдохнуть."""
+
     @abstractmethod
-    def play_with_tamagochi(self) -> None: ...
+    def play_with_tamagochi(self) -> None:
+        """Поиграть с питомцем."""
+
     @abstractmethod
-    def get_status(self) -> dict[str, int]: ...
+    def get_status(self) -> dict[str, int]:
+        """Получить статус игры."""
+
     @abstractmethod
-    def food(self) -> list[Food]: ...
+    def food(self) -> list[Food]:
+        """Вернуть сумку с едой."""
+
     @abstractmethod
-    def medicine(self) -> list[Medicine]: ...
+    def medicine(self) -> list[Medicine]:
+        """Вернуть сумку с лекарствами."""
+
 
 class SimpleGame(AbstractGame):
+    """Конкретная реализация игры.
+
+    Игровые ошибки (нехватка монет, пустая сумка, неверный выбор) не
+    выбрасываются наружу: они перехватываются и печатаются сообщением,
+    чтобы игровой цикл продолжался.
+    """
+
     def __init__(
         self,
         tamagochi: AbstractTamagochi,
@@ -51,6 +105,13 @@ class SimpleGame(AbstractGame):
         all_food: list[Food] | None = None,
         all_medicine: list[Medicine] | None = None,
     ) -> None:
+        """Создать игру.
+
+        :param tamagochi: питомец.
+        :param clicker: кликер, выдающий монеты.
+        :param all_food: ассортимент магазина еды.
+        :param all_medicine: ассортимент магазина лекарств.
+        """
         self._tamagochi = tamagochi
         self._clicker = clicker
         self._store_food = list(all_food or [])
@@ -62,40 +123,51 @@ class SimpleGame(AbstractGame):
 
     @property
     def tamagochi(self) -> AbstractTamagochi:
+        """Вернуть питомца."""
         return self._tamagochi
 
     @property
     def clicker(self) -> AbstractClicker:
+        """Вернуть кликер."""
         return self._clicker
 
     @property
     def coins(self) -> int:
+        """Вернуть количество монет в кошельке игры."""
         return self._coins
 
     @property
     def food_store(self) -> list[Food]:
+        """Вернуть ассортимент еды в магазине."""
         return list(self._store_food)
 
     @property
     def medicine_store(self) -> list[Medicine]:
+        """Вернуть ассортимент лекарств в магазине."""
         return list(self._store_medicine)
 
     @property
     def food(self) -> list[Food]:
+        """Вернуть сумку с едой."""
         return self._bag_food
 
     @property
     def medicine(self) -> list[Medicine]:
+        """Вернуть сумку с лекарствами."""
         return self._bag_medicine
 
     def work(self) -> int:
+        """Пойти на работу и заработать монеты.
+
+        Обновление состояния питомца выполняет вызывающий код (игровой
+        цикл), чтобы за один ход происходил ровно один тик.
+
+        :return: сколько монет заработано за клик.
+        """
         if not self._check_alive():
             return START_COINS
         self._clicker.click()
-        # ДЛЯ ТЕСТА: здесь не преобразуем к int!
-        income = self._clicker.income_per_click()
-        if callable(income):
-            income = income()  # чтобы тесты с дуратскими expectations прошли
+        income = _income(self._clicker)
         self._coins += income
         return income
 
@@ -106,6 +178,12 @@ class SimpleGame(AbstractGame):
         index: int | None = None,
         name: str | None = None,
     ) -> None:
+        """Купить еду и положить её в сумку.
+
+        :param item: номер, название или сам объект еды.
+        :param index: номер товара в магазине (альтернатива ``item``).
+        :param name: название товара (альтернатива ``item``).
+        """
         if not self._check_alive():
             return
         try:
@@ -125,6 +203,12 @@ class SimpleGame(AbstractGame):
         index: int | None = None,
         name: str | None = None,
     ) -> None:
+        """Купить лекарство и положить его в сумку.
+
+        :param item: номер, название или сам объект лекарства.
+        :param index: номер товара в магазине (альтернатива ``item``).
+        :param name: название товара (альтернатива ``item``).
+        """
         if not self._check_alive():
             return
         try:
@@ -148,6 +232,12 @@ class SimpleGame(AbstractGame):
         index: int | None = None,
         name: str | None = None,
     ) -> None:
+        """Покормить питомца едой из сумки.
+
+        :param item: номер, название или сам объект еды из сумки.
+        :param index: номер предмета в сумке (альтернатива ``item``).
+        :param name: название предмета (альтернатива ``item``).
+        """
         if not self._check_alive():
             return
         try:
@@ -156,7 +246,7 @@ class SimpleGame(AbstractGame):
             )
             food = self._bag_food[position]
             self._tamagochi.feed(food)
-            self._bag_food.pop(position)  # только pop по индексу!
+            self._remove_food(food)
             print(f'Питомец съел: {food.name}')
         except GameError as error:
             print(f'Не удалось покормить: {error}')
@@ -168,6 +258,12 @@ class SimpleGame(AbstractGame):
         index: int | None = None,
         name: str | None = None,
     ) -> None:
+        """Вылечить питомца лекарством из сумки.
+
+        :param item: номер, название или сам объект лекарства из сумки.
+        :param index: номер предмета в сумке (альтернатива ``item``).
+        :param name: название предмета (альтернатива ``item``).
+        """
         if not self._check_alive():
             return
         try:
@@ -185,6 +281,7 @@ class SimpleGame(AbstractGame):
             print(f'Не удалось вылечить: {error}')
 
     def rest_tamagochi(self) -> None:
+        """Дать питомцу отдохнуть."""
         if not self._check_alive():
             return
         try:
@@ -193,6 +290,7 @@ class SimpleGame(AbstractGame):
             print(error)
 
     def play_with_tamagochi(self) -> None:
+        """Поиграть с питомцем."""
         if not self._check_alive():
             return
         try:
@@ -201,33 +299,77 @@ class SimpleGame(AbstractGame):
             print(error)
 
     def get_status(self) -> dict[str, int]:
+        """Собрать полный статус партии.
+
+        :return: показатели питомца (``hunger``, ``fatigue``, ``hp``,
+            ``energy``), ``coins`` и ``game_over``.
+        """
         status = Status(self._tamagochi.status())
         status['coins'] = self._coins
         status['game_over'] = int(self.is_over())
         return status
 
     def is_alive(self) -> bool:
+        """Проверить, жив ли питомец.
+
+        :return: ``True``, если питомец ещё жив.
+        """
         return self._tamagochi.is_alive()
 
     def is_over(self) -> bool:
+        """Проверить, закончилась ли игра.
+
+        :return: ``True``, если питомец погиб.
+        """
         if not self._tamagochi.is_alive():
             self._is_over = True
         return self._is_over
 
     def __repr__(self) -> str:
+        """Вернуть читаемое представление игры."""
         return (
             f'SimpleGame(tamagochi={self._tamagochi!r}, '
             f'food={len(self._bag_food)}, medicine={len(self._bag_medicine)}, '
             f'coins={self._coins})'
         )
 
+    def _remove_food(self, eaten: Food) -> None:
+        """Убрать из сумки съеденную порцию, сохранив остальную еду.
+
+        Удаляется ровно один объект: сначала по идентичности, затем — по
+        названию и характеристикам, если в сумке лежит его копия.
+
+        :param eaten: порция, которую съел питомец.
+        """
+        for position, stored in enumerate(self._bag_food):
+            if stored is eaten:
+                self._bag_food.pop(position)
+                return
+        for position, stored in enumerate(self._bag_food):
+            if (
+                stored.name == eaten.name
+                and stored.satiety == eaten.satiety
+                and stored.price == eaten.price
+            ):
+                self._bag_food.pop(position)
+                return
+
     def _check_alive(self) -> bool:
+        """Проверить, что питомец жив и игра продолжается.
+
+        :return: ``True``, если действия доступны.
+        """
         if self.is_over():
             print(GAME_OVER_MESSAGE)
             return False
         return True
 
     def _pay(self, amount: int) -> None:
+        """Списать монеты за покупку.
+
+        :param amount: стоимость покупки.
+        :raises NotEnoughMoney: если монет не хватает.
+        """
         if amount > self._coins:
             raise NotEnoughMoney(
                 f'Нужно {amount} монет, а в кошельке только {self._coins}'
@@ -240,6 +382,18 @@ class SimpleGame(AbstractGame):
         item: ItemChoice,
         what: str,
     ) -> int:
+        """Определить номер предмета в списке.
+
+        Поддерживается выбор по номеру, по названию и по самому объекту,
+        поэтому вызывающий код может не знать, в каком виде хранится выбор.
+
+        :param items: список доступных предметов.
+        :param item: номер, название, объект предмета или ``None``.
+        :param what: название категории для сообщений об ошибке.
+        :return: индекс предмета в списке.
+        :raises EmptyInventory: если список пуст.
+        :raises InvalidChoice: если предмет не найден.
+        """
         if not items:
             raise EmptyInventory(f'Нет доступной {what}')
         if item is None:
@@ -256,7 +410,30 @@ class SimpleGame(AbstractGame):
         for number, candidate in enumerate(items):
             if candidate is item:
                 return number
+        target = getattr(item, 'name', None)
+        if target is not None:
+            for number, candidate in enumerate(items):
+                if candidate.name == target:
+                    return number
         raise InvalidChoice(f'Такого предмета нет среди {what}')
+
+
+def _income(clicker: AbstractClicker) -> int:
+    """Прочитать доход кликера за один клик.
+
+    Доход может быть как свойством-числом, так и методом — поддерживаются
+    оба варианта, чтобы игра работала с любой реализацией кликера.
+
+    :param clicker: кликер, у которого запрашивается доход.
+    :return: доход за один клик в монетах.
+    """
+    income = clicker.income_per_click
+    if callable(income):
+        income = income()
+    try:
+        return int(income)
+    except (TypeError, ValueError):
+        return START_COINS
 
 
 def _merge(
@@ -264,6 +441,13 @@ def _merge(
     index: int | None,
     name: str | None,
 ) -> ItemChoice:
+    """Свести разные способы выбора предмета к одному значению.
+
+    :param item: основной аргумент выбора.
+    :param index: номер предмета, если передан.
+    :param name: название предмета, если передано.
+    :return: непустой способ выбора или ``None``.
+    """
     if item is not None:
         return item
     if index is not None:
