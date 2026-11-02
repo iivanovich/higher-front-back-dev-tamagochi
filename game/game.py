@@ -102,11 +102,17 @@ class SimpleGame(AbstractGame):
         if self._coins < food_src.price:
             raise NotEnoughMoney("Недостаточно монет.")
         self._coins -= food_src.price
-        self._inventory_food.append(Food(
-            name=food_src.name,
-            satiety=food_src.satiety,
-            price=food_src.price
-        ))
+        self._inventory_food.append(food_src)
+
+    def feed_tamagochi(self, idx: int = 0) -> None:
+        self._ensure_alive()
+        if not self._inventory_food:
+            raise InvalidActionError("Нет еды в инвентаре.")
+        if not 0 <= idx < len(self._inventory_food):
+            raise InvalidActionError("Некорректный выбор еды.")
+        food = self._inventory_food.pop(idx)
+        self._tamagochi.feed(food)
+        self._tamagochi.update()
 
     def buy_medicine(self, idx: int = 0) -> None:
         self._ensure_alive()
@@ -124,16 +130,6 @@ class SimpleGame(AbstractGame):
             heal_hp=med_src.heal_hp,
             number_of_uses=med_src.number_of_uses,
         ))
-
-    def feed_tamagochi(self, idx: int = 0) -> None:
-        self._ensure_alive()
-        if not self._inventory_food:
-            raise InvalidActionError("Нет еды в инвентаре.")
-        if not 0 <= idx < len(self._inventory_food):
-            raise InvalidActionError("Некорректный выбор еды.")
-        food = self._inventory_food.pop(idx)
-        self._tamagochi.feed(food)
-        self._tamagochi.update()
 
     def heal_tamagochi(self, idx: int = 0) -> None:
         self._ensure_alive()
