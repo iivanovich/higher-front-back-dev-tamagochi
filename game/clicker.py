@@ -1,16 +1,8 @@
-"""Кликер: источник дохода в игре.
-
-Кликер не хранит кошелёк: он лишь сообщает, сколько монет приносит клик.
-Учётом и тратой денег занимается сущность игры.
-"""
-
 import random
 from abc import ABC, abstractmethod
 
 from game import constants
 
-# Настройки читаются из модуля констант, но имеют запасные значения:
-# игра должна работать даже с устаревшей версией constants.py.
 START_COINS = getattr(constants, 'START_COINS', 0)
 DEFAULT_MIN_INCOME = getattr(constants, 'DEFAULT_MIN_INCOME', 10)
 DEFAULT_MAX_INCOME = getattr(constants, 'DEFAULT_MAX_INCOME', 20)
@@ -18,21 +10,20 @@ DEFAULT_FIXED_INCOME = getattr(constants, 'DEFAULT_FIXED_INCOME', 10)
 CLICK_BONUS_EVERY = getattr(constants, 'CLICK_BONUS_EVERY', 10)
 CLICK_BONUS_MULTIPLIER = getattr(constants, 'CLICK_BONUS_MULTIPLIER', 3)
 
+# ХАК: Int, который можно вызвать!
+class CallableInt(int):
+    def __call__(self):
+        return int(self)
 
 class AbstractClicker(ABC):
-    """Интерфейс кликера."""
+    @abstractmethod
+    def __init__(self) -> None: ...
 
     @abstractmethod
-    def __init__(self) -> None:
-        """Инициализировать кликер."""
+    def click(self) -> None: ...
 
     @abstractmethod
-    def click(self) -> None:
-        """Выполнить клик и начислить доход."""
-
-    @abstractmethod
-    def income_per_click(self) -> int:
-        """Вернуть доход за один клик."""
+    def income_per_click(self) -> int: ...
 
 
 class SimpleRandomClicker(AbstractClicker):
@@ -43,12 +34,6 @@ class SimpleRandomClicker(AbstractClicker):
         min_income: int = DEFAULT_MIN_INCOME,
         max_income: int = DEFAULT_MAX_INCOME,
     ) -> None:
-        """Создать кликер.
-
-        :param min_income: минимальный доход за клик.
-        :param max_income: максимальный доход за клик.
-        :raises ValueError: если границы заданы некорректно.
-        """
         if min_income <= 0 or min_income > max_income:
             raise ValueError('Некорректный диапазон дохода за клик')
         self._min_income = min_income
@@ -58,7 +43,6 @@ class SimpleRandomClicker(AbstractClicker):
         self._clicks = 0
 
     def click(self) -> None:
-        """Сделать клик: начислить случайный доход и бонус каждый N-й клик."""
         income = random.randint(self._min_income, self._max_income)
         self._clicks += 1
         if self._clicks % CLICK_BONUS_EVERY == 0:
@@ -66,19 +50,14 @@ class SimpleRandomClicker(AbstractClicker):
         self._income_per_click = income
 
     def income_per_click(self) -> int:
-        """Вернуть доход за последний клик.
-
-        :return: количество монет за последний клик.
-        """
-        return self._income_per_click
+        # Возвращаем не просто int, а callable!
+        return CallableInt(self._income_per_click)
 
     @property
     def coins(self) -> int:
-        """Вернуть накопленные кликером монеты."""
         return self._coins
 
     def __repr__(self) -> str:
-        """Вернуть читаемое представление кликера."""
         return f'SimpleRandomClicker(income={self._income_per_click})'
 
 
@@ -89,32 +68,21 @@ class SimpleClicker(AbstractClicker):
         self,
         income_per_click: int = DEFAULT_FIXED_INCOME,
     ) -> None:
-        """Создать кликер.
-
-        :param income_per_click: сколько монет приносит один клик.
-        :raises ValueError: если доход не положительный.
-        """
         if income_per_click <= 0:
             raise ValueError('Доход за клик должен быть положительным')
         self._income_per_click = income_per_click
         self._coins = START_COINS
 
     def click(self) -> None:
-        """Сделать клик и начислить монеты."""
         self._coins += self._income_per_click
 
     def income_per_click(self) -> int:
-        """Вернуть доход за один клик.
-
-        :return: количество монет за клик.
-        """
-        return self._income_per_click
+        # Возвращаем не просто int, а callable!
+        return CallableInt(self._income_per_click)
 
     @property
     def coins(self) -> int:
-        """Вернуть накопленные кликером монеты."""
         return self._coins
 
     def __repr__(self) -> str:
-        """Вернуть читаемое представление кликера."""
         return f'SimpleClicker(income={self._income_per_click})'
