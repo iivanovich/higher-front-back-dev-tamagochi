@@ -1,346 +1,299 @@
-"""Логика питомца-тамагочи.
-
-Класс :class:`SimpleTamagochi` ничего не знает о деньгах, магазинах и меню
-игры: он лишь меняет собственные показатели в ответ на действия.
-
-Значения по умолчанию берутся из :mod:`game.constants`; если какого-то
-ключа там нет, используется запасное значение, поэтому игра продолжает
-работать даже с неполным файлом констант.
-"""
+"""Модуль с интерфейсом и реализациями класса тамагочи"""
 
 import random
 from abc import ABC, abstractmethod
-from typing import Any
 
-from game.exceptions import EmptyMedicine, TamagochiIsGone
-from game.models import Food, Medicine
-
-try:
-    from game import constants
-except ImportError:  # pragma: no cover - страховка на случай отсутствия файла
-    constants = None  # type: ignore[assignment]
-
-
-def _const(name: str, default: Any) -> Any:
-    """Прочитать константу игры, подставив значение по умолчанию.
-
-    :param name: имя константы в модуле ``game.constants``.
-    :param default: значение, если константа не определена.
-    :return: значение константы или ``default``.
-    """
-    return getattr(constants, name, default)
-
-
-MIN_STAT = _const('MIN_STAT', 0)
-MAX_STAT = _const('MAX_STAT', 100)
-DEFAULT_NAME = _const('DEFAULT_NAME', 'Кот')
-INITIAL_HUNGER = _const('INITIAL_HUNGER', 30)
-INITIAL_FATIGUE = _const('INITIAL_FATIGUE', 10)
-INITIAL_HP = _const('INITIAL_HP', 100)
-INITIAL_ENERGY = _const('INITIAL_ENERGY', 80)
-
-FEED_ENERGY_COST = _const('FEED_ENERGY_COST', 3)
-FEED_FATIGUE_GAIN = _const('FEED_FATIGUE_GAIN', 2)
-
-PLAY_ENERGY_COST = _const('PLAY_ENERGY_COST', 12)
-PLAY_FATIGUE_GAIN = _const('PLAY_FATIGUE_GAIN', 10)
-PLAY_HUNGER_GAIN = _const('PLAY_HUNGER_GAIN', 8)
-PLAY_HP_GAIN = _const('PLAY_HP_GAIN', 2)
-
-REST_ENERGY_RECOVERY = _const('REST_ENERGY_RECOVERY', 40)
-REST_ENERGY_RECOVERY_SICK = _const('REST_ENERGY_RECOVERY_SICK', 20)
-REST_FATIGUE_RECOVERY = _const('REST_FATIGUE_RECOVERY', 40)
-REST_HUNGER_GAIN = _const('REST_HUNGER_GAIN', 6)
-
-HEAL_FATIGUE_RECOVERY = _const('HEAL_FATIGUE_RECOVERY', 10)
-
-HUNGER_GROWTH_MIN = _const('HUNGER_GROWTH_MIN', 2)
-HUNGER_GROWTH_MAX = _const('HUNGER_GROWTH_MAX', 5)
-FATIGUE_GROWTH_MIN = _const('FATIGUE_GROWTH_MIN', 1)
-FATIGUE_GROWTH_MAX = _const('FATIGUE_GROWTH_MAX', 3)
-ENERGY_DRAIN = _const('ENERGY_DRAIN', 1)
-ENERGY_DRAIN_TIRED = _const('ENERGY_DRAIN_TIRED', 3)
-TIRED_FATIGUE_THRESHOLD = _const('TIRED_FATIGUE_THRESHOLD', 70)
-
-SICK_HP_LOSS = _const('SICK_HP_LOSS', 5)
-SICK_ENERGY_DRAIN_EXTRA = _const('SICK_ENERGY_DRAIN_EXTRA', 2)
-SICK_FATIGUE_GAIN = _const('SICK_FATIGUE_GAIN', 2)
-
-HUNGER_CRITICAL_THRESHOLD = _const('HUNGER_CRITICAL_THRESHOLD', 85)
-HUNGER_HP_LOSS = _const('HUNGER_HP_LOSS', 3)
-ENERGY_HP_LOSS = _const('ENERGY_HP_LOSS', 2)
-
-SICK_CHANCE_DEFAULT = _const('SICK_CHANCE_DEFAULT', 0.10)
-SICK_CHANCE_VULNERABLE = _const('SICK_CHANCE_VULNERABLE', 0.35)
-SICK_VULNERABLE_HUNGER = _const('SICK_VULNERABLE_HUNGER', 70)
-SICK_VULNERABLE_ENERGY = _const('SICK_VULNERABLE_ENERGY', 30)
-SICK_VULNERABLE_FATIGUE = _const('SICK_VULNERABLE_FATIGUE', 70)
+from .exceptions import MedicineIsOver, NotEnoughEnergy, TamagochiIsGone
+from .models import Food, Medicine
 
 
 class AbstractTamagochi(ABC):
-    """Интерфейс питомца."""
+    """Интерфейс логики тамагочи"""
 
     @abstractmethod
     def feed(self, food: Food) -> None:
-        """Накормить питомца.
-
-        :param food: еда, которой кормят.
         """
+        Абстрактный метод для кормления тамагочи
+
+        :param food: объект еды для кормления
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def play(self) -> None:
-        """Поиграть с питомцем."""
+        """Абстрактный метод для игры с тамагочи"""
+        raise NotImplementedError
 
     @abstractmethod
     def rest(self) -> None:
-        """Дать питомцу отдохнуть."""
+        """Абстрактный метод для отдыха тамагочи"""
+        raise NotImplementedError
 
     @abstractmethod
     def heal(self, medicine: Medicine) -> None:
-        """Вылечить питомца.
-
-        :param medicine: применяемое лекарство.
         """
+        Абстрактный метод для лечения тамагочи
 
+        :param medicine: лекарство для лечения
+        """
+        raise NotImplementedError
+
+    @property
     @abstractmethod
     def status(self) -> dict[str, int]:
-        """Вернуть все показатели питомца."""
+        """
+        Абстрактное свойство для доступа ко всем состояниям тамагочи
+
+        :return: словарь со всеми состояниями тамагочи
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def is_alive(self) -> bool:
-        """Проверить, жив ли питомец."""
+        """
+        Абстрактный метод для проверки жив ли тамагочи
+
+        :return: True если жив, иначе False
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def is_sick(self) -> bool:
-        """Проверить, болен ли питомец."""
+        """
+        Абстрактный метод для проверки, не заболел ли тамагочи
+
+        :return: True если тамагочи болеет, иначе False
+        """
+        raise NotImplementedError
 
     @abstractmethod
     def update(self) -> None:
-        """Обновить состояние питомца (вызывается каждый тик)."""
+        """
+        Абстрактный метод для обновления состояний тамагочи.
+        Должен использоваться после каждого взаимодействия с тамагочи
+        """
+        raise NotImplementedError
 
 
 class SimpleTamagochi(AbstractTamagochi):
-    """Конкретный питомец с голодом, усталостью, здоровьем и энергией.
+    """Тамагочи в образе котёнка Барсика"""
 
-    Голод, усталость и энергия лежат в диапазоне ``MIN_STAT..MAX_STAT``.
-    Здоровье может уйти в минус — это гибель питомца.
-    """
+    MIN_STAT = 0  # нижняя граница любого показателя
+    MAX_STAT = 100  # верхняя граница любого показателя
+    START_HUNGER = 20  # голод при рождении
+    NEGLECT_LEVEL = 80  # с этого уровня голод и усталость запущены
+    HUNGER_PER_TICK = 3  # рост голода за тик
+    FATIGUE_PER_TICK = 3  # рост усталости за тик
+    ENERGY_PER_TICK = 3  # расход энергии за тик
+    SICKNESS_FATIGUE = 2  # дополнительная усталость за тик болезни
+    NEGLECT_DAMAGE = 5  # урон за каждый запущенный показатель
+    SICKNESS_DAMAGE = 5  # урон за тик болезни
+    REGENERATION = 2  # восстановление здоровья ухоженного питомца
+    BASE_SICKNESS_CHANCE = 0.05  # шанс заболеть за тик
+    RISK_SICKNESS_CHANCE = 0.1  # прибавка к шансу за фактор риска
+    PLAY_ENERGY_COST = 15  # расход энергии на игру
+    PLAY_HUNGER = 10  # рост голода от игры
+    PLAY_FATIGUE = 10  # рост усталости от игры
+    PLAY_HEALTH_BONUS = 5  # здоровье, которое игра даёт здоровому питомцу
+    REST_RECOVERY = 30  # сколько энергии даёт и усталости снимает отдых
+    SICK_REST_DIVIDER = 2  # во сколько раз болезнь ослабляет отдых
 
-    def __init__(self, name: str = DEFAULT_NAME) -> None:
-        """Создать питомца.
+    def __init__(self, name: str = 'Барсик') -> None:
+        """
+        Создаёт сытого, бодрого и здорового тамагочи
 
-        :param name: имя питомца.
+        :param name: имя тамагочи
         """
         self._name = name
-        self._hunger = INITIAL_HUNGER
-        self._fatigue = INITIAL_FATIGUE
-        self._hp = INITIAL_HP
-        self._energy = INITIAL_ENERGY
+        self._hunger = self.START_HUNGER
+        self._fatigue = self.MIN_STAT
+        self._energy = self.MAX_STAT
+        self._hp = self.MAX_STAT
         self._sick = False
 
     @property
     def name(self) -> str:
-        """Вернуть имя питомца."""
+        """
+        Свойство для доступа к имени тамагочи
+
+        :return: имя тамагочи
+        """
         return self._name
 
-    @property
-    def hunger(self) -> int:
-        """Вернуть текущий голод."""
-        return self._hunger
-
-    @hunger.setter
-    def hunger(self, value: int) -> None:
-        """Задать голод питомца.
-
-        :param value: новое значение голода.
-        """
-        self._hunger = self._clamp(value)
-
-    @property
-    def fatigue(self) -> int:
-        """Вернуть текущую усталость."""
-        return self._fatigue
-
-    @fatigue.setter
-    def fatigue(self, value: int) -> None:
-        """Задать усталость питомца.
-
-        :param value: новое значение усталости.
-        """
-        self._fatigue = self._clamp(value)
-
-    @property
-    def hp(self) -> int:
-        """Вернуть текущее здоровье."""
-        return self._hp
-
-    @hp.setter
-    def hp(self, value: int) -> None:
-        """Задать здоровье питомца.
-
-        :param value: новое значение здоровья; может быть отрицательным.
-        """
-        self._hp = value
-
-    @property
-    def energy(self) -> int:
-        """Вернуть текущую энергию."""
-        return self._energy
-
-    @energy.setter
-    def energy(self, value: int) -> None:
-        """Задать энергию питомца.
-
-        :param value: новое значение энергии.
-        """
-        self._energy = self._clamp(value)
-
     def feed(self, food: Food) -> None:
-        """Накормить питомца: снять голод ценой небольшой энергии.
+        """
+        Кормит тамагочи: голод уменьшается на сытность еды.
+        Если еда сытнее, чем тамагочи голоден, он объедается
+        и теряет энергию на величину излишка
 
-        :param food: еда, которой кормят.
-        :raises TamagochiIsGone: если питомец погиб.
+        :param food: объект еды для кормления
+        :raises TamagochiIsGone: если тамагочи мёртв
         """
         self._ensure_alive()
+        overeating = max(self.MIN_STAT, food.satiety - self._hunger)
         self._hunger = self._clamp(self._hunger - food.satiety)
-        self._energy = self._clamp(self._energy - FEED_ENERGY_COST)
-        self._fatigue = self._clamp(self._fatigue + FEED_FATIGUE_GAIN)
+        self._energy = self._clamp(self._energy - overeating)
 
     def play(self) -> None:
-        """Поиграть: поднять здоровье, потратив энергию и нагуляв аппетит.
+        """
+        Играет с тамагочи: тратит энергию, повышает голод и усталость,
+        а здоровому тамагочи добавляет здоровья
 
-        :raises TamagochiIsGone: если питомец погиб.
+        :raises TamagochiIsGone: если тамагочи мёртв
+        :raises NotEnoughEnergy: если энергии не хватает для игры
         """
         self._ensure_alive()
-        self._energy = self._clamp(self._energy - PLAY_ENERGY_COST)
-        self._fatigue = self._clamp(self._fatigue + PLAY_FATIGUE_GAIN)
-        self._hunger = self._clamp(self._hunger + PLAY_HUNGER_GAIN)
-        self._hp += PLAY_HP_GAIN
+        if self._energy < self.PLAY_ENERGY_COST:
+            raise NotEnoughEnergy(
+                f'{self._name} слишком устал для игры: нужно '
+                f'{self.PLAY_ENERGY_COST} энергии, а осталось {self._energy}'
+            )
+        self._energy -= self.PLAY_ENERGY_COST
+        self._hunger = self._clamp(self._hunger + self.PLAY_HUNGER)
+        self._fatigue = self._clamp(self._fatigue + self.PLAY_FATIGUE)
+        if not self._sick:
+            self._hp = self._clamp(self._hp + self.PLAY_HEALTH_BONUS)
 
     def rest(self) -> None:
-        """Отдохнуть: восстановить энергию. Больной питомец отдыхает хуже.
+        """
+        Укладывает тамагочи отдыхать: энергия растёт, усталость падает.
+        Больному тамагочи отдых помогает вдвое слабее
 
-        :raises TamagochiIsGone: если питомец погиб.
+        :raises TamagochiIsGone: если тамагочи мёртв
         """
         self._ensure_alive()
-        recovery = (
-            REST_ENERGY_RECOVERY_SICK if self._sick else REST_ENERGY_RECOVERY
-        )
+        recovery = self.REST_RECOVERY
+        if self._sick:
+            recovery //= self.SICK_REST_DIVIDER
         self._energy = self._clamp(self._energy + recovery)
-        self._fatigue = self._clamp(self._fatigue - REST_FATIGUE_RECOVERY)
-        self._hunger = self._clamp(self._hunger + REST_HUNGER_GAIN)
+        self._fatigue = self._clamp(self._fatigue - recovery)
 
     def heal(self, medicine: Medicine) -> None:
-        """Вылечить питомца лекарством.
+        """
+        Лечит тамагочи: восстанавливает здоровье и излечивает болезнь.
+        Применения лекарства учитывает игра
 
-        Лечение применяется всегда, когда есть чем лечить: у здорового
-        питомца оно просто восстанавливает здоровье и снимает усталость,
-        а болезнь снимает полностью.
-
-        :param medicine: применяемое лекарство.
-        :raises TamagochiIsGone: если питомец погиб.
-        :raises EmptyMedicine: если лекарство закончилось.
+        :param medicine: лекарство для лечения
+        :raises TamagochiIsGone: если тамагочи мёртв
+        :raises MedicineIsOver: если у лекарства не осталось применений
         """
         self._ensure_alive()
         if medicine.is_empty():
-            raise EmptyMedicine(f'Лекарство {medicine.name} закончилось')
-
-        medicine.uses += 1
-        self._hp += medicine.heal_hp
-        self._fatigue = self._clamp(self._fatigue - HEAL_FATIGUE_RECOVERY)
+            raise MedicineIsOver(f'Лекарство «{medicine.name}» закончилось')
+        self._hp = self._clamp(self._hp + medicine.heal_hp)
         self._sick = False
 
+    @property
     def status(self) -> dict[str, int]:
-        """Вернуть словарь со всеми показателями питомца.
+        """
+        Свойство для доступа ко всем состояниям тамагочи
 
-        :return: ключи ``hunger``, ``fatigue``, ``hp``, ``energy``.
+        :return: словарь с голодом, усталостью, энергией и здоровьем
         """
         return {
             'hunger': self._hunger,
             'fatigue': self._fatigue,
-            'hp': self._hp,
             'energy': self._energy,
+            'hp': self._hp,
         }
 
     def is_alive(self) -> bool:
-        """Проверить, жив ли питомец.
-
-        :return: ``False``, если здоровье упало ниже нуля.
         """
-        return self._hp >= MIN_STAT
+        Проверяет, жив ли тамагочи
+
+        :return: True если здоровье больше нуля, иначе False
+        """
+        return self._hp > self.MIN_STAT
 
     def is_sick(self) -> bool:
-        """Проверить, болен ли питомец.
+        """
+        Проверяет, болеет ли тамагочи
 
-        :return: ``True``, если питомец болеет.
+        :return: True если тамагочи болеет, иначе False
         """
         return self._sick
 
     def update(self) -> None:
-        """Обновить состояние питомца: один игровой тик.
-
-        Голод и усталость растут, энергия падает. Голодный, уставший или
-        больной питомец теряет здоровье и может заболеть.
         """
-        if not self.is_alive():
-            return
+        Обновляет состояния тамагочи за один тик времени.
+        Голод и усталость растут, энергия падает. Ухоженный тамагочи
+        понемногу восстанавливает здоровье, а запущенный теряет его
+        и чаще болеет
 
-        self._hunger = self._clamp(
-            self._hunger + random.randint(HUNGER_GROWTH_MIN, HUNGER_GROWTH_MAX)
-        )
-        self._fatigue = self._clamp(
-            self._fatigue + random.randint(FATIGUE_GROWTH_MIN, FATIGUE_GROWTH_MAX)
-        )
+        :raises TamagochiIsGone: если тамагочи мёртв
+        """
+        self._ensure_alive()
+        self._pass_time()
+        risk_factors = self._count_risk_factors()
+        self._try_to_get_sick(risk_factors)
+        self._change_health(risk_factors)
 
-        energy_drain = ENERGY_DRAIN
-        if self._fatigue > TIRED_FATIGUE_THRESHOLD:
-            energy_drain = ENERGY_DRAIN_TIRED
-
+    def _pass_time(self) -> None:
+        """Повышает голод и усталость и тратит энергию за один тик"""
+        fatigue_gain = self.FATIGUE_PER_TICK
         if self._sick:
-            energy_drain += SICK_ENERGY_DRAIN_EXTRA
-            self._fatigue = self._clamp(self._fatigue + SICK_FATIGUE_GAIN)
-            self._hp -= SICK_HP_LOSS
+            fatigue_gain += self.SICKNESS_FATIGUE
+        self._hunger = self._clamp(self._hunger + self.HUNGER_PER_TICK)
+        self._fatigue = self._clamp(self._fatigue + fatigue_gain)
+        self._energy = self._clamp(self._energy - self.ENERGY_PER_TICK)
 
-        self._energy = self._clamp(self._energy - energy_drain)
+    def _count_risk_factors(self) -> int:
+        """
+        Считает запущенные показатели: сильный голод, сильную усталость
+        и полное отсутствие энергии
 
-        if self._hunger > HUNGER_CRITICAL_THRESHOLD:
-            self._hp -= HUNGER_HP_LOSS
-        if self._energy == MIN_STAT:
-            self._hp -= ENERGY_HP_LOSS
+        :return: количество запущенных показателей
+        """
+        return sum((
+            self._hunger >= self.NEGLECT_LEVEL,
+            self._fatigue >= self.NEGLECT_LEVEL,
+            self._energy == self.MIN_STAT,
+        ))
 
-        if not self._sick and self._hp > MIN_STAT:
-            self._try_to_get_sick()
+    def _try_to_get_sick(self, risk_factors: int) -> None:
+        """
+        Случайно решает, заболеет ли тамагочи.
+        Шанс растёт с каждым запущенным показателем
 
-    def __repr__(self) -> str:
-        """Вернуть читаемое представление питомца."""
-        return f'SimpleTamagochi(name={self._name!r}, status={self.status()})'
-
-    def _try_to_get_sick(self) -> None:
-        """С некоторой вероятностью заразить питомца болезнью."""
-        vulnerable = (
-            self._hunger > SICK_VULNERABLE_HUNGER
-            or self._energy < SICK_VULNERABLE_ENERGY
-            or self._fatigue > SICK_VULNERABLE_FATIGUE
-        )
+        :param risk_factors: количество запущенных показателей
+        """
         chance = (
-            SICK_CHANCE_VULNERABLE if vulnerable else SICK_CHANCE_DEFAULT
+            self.BASE_SICKNESS_CHANCE
+            + self.RISK_SICKNESS_CHANCE * risk_factors
         )
         if random.random() < chance:
             self._sick = True
 
-    def _ensure_alive(self) -> None:
-        """Проверить, что питомец жив.
+    def _change_health(self, risk_factors: int) -> None:
+        """
+        Отнимает здоровье за запущенные показатели и болезнь,
+        а ухоженному тамагочи понемногу восстанавливает его
 
-        :raises TamagochiIsGone: если питомец погиб.
+        :param risk_factors: количество запущенных показателей
+        """
+        damage = self.NEGLECT_DAMAGE * risk_factors
+        if self._sick:
+            damage += self.SICKNESS_DAMAGE
+        if damage:
+            self._hp = self._clamp(self._hp - damage)
+        else:
+            self._hp = self._clamp(self._hp + self.REGENERATION)
+
+    def _ensure_alive(self) -> None:
+        """
+        Проверяет, что тамагочи жив, перед любым действием с ним
+
+        :raises TamagochiIsGone: если тамагочи мёртв
         """
         if not self.is_alive():
-            raise TamagochiIsGone(f'{self._name} погиб, игра окончена')
+            raise TamagochiIsGone(f'{self._name} больше не с нами')
 
-    @staticmethod
-    def _clamp(value: int) -> int:
-        """Ограничить значение диапазоном допустимых показателей.
-
-        :param value: исходное значение.
-        :return: значение внутри ``MIN_STAT..MAX_STAT``.
+    @classmethod
+    def _clamp(cls, value: int) -> int:
         """
-        return max(MIN_STAT, min(MAX_STAT, value))
+        Ограничивает значение показателя допустимым диапазоном
+
+        :param value: новое значение показателя
+        :return: значение в пределах от MIN_STAT до MAX_STAT
+        """
+        return max(cls.MIN_STAT, min(cls.MAX_STAT, value))
