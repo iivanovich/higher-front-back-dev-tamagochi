@@ -103,6 +103,7 @@ class SimpleGame(AbstractGame):
         if self._coins < food_src.price:
             raise NotEnoughMoney("Недостаточно монет.")
         self._coins -= food_src.price
+        # Создание нового объекта Food - важно!
         self._inventory_food.append(
             Food(name=food_src.name, satiety=food_src.satiety, price=food_src.price)
         )
@@ -117,9 +118,11 @@ class SimpleGame(AbstractGame):
         if self._coins < med_src.price:
             raise NotEnoughMoney("Недостаточно монет.")
         self._coins -= med_src.price
+        # Создаём новый объект Medicine, не ссылку!
         self._inventory_medicine.append(Medicine(
             name=med_src.name, price=med_src.price,
-            heal_hp=med_src.heal_hp, number_of_uses=med_src.number_of_uses))
+            heal_hp=med_src.heal_hp, number_of_uses=med_src.number_of_uses
+        ))
 
     def feed_tamagochi(self, idx: int = 0) -> None:
         self._ensure_alive()
@@ -129,6 +132,7 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Некорректный выбор еды для кормления.")
         food = self._inventory_food[idx]
         self.tamagochi.feed(food)
+        # Удаляем только выбранный элемент!
         del self._inventory_food[idx]
         self.tamagochi.update()
 
