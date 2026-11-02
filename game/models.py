@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from .exceptions import InvalidActionError
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class Food:
     name: str
     satiety: int
@@ -12,8 +12,7 @@ class Food:
     def __repr__(self) -> str:
         return f"Food(name={self.name!r}, satiety={self.satiety}, price={self.price})"
 
-
-@dataclass
+@dataclass(slots=True)
 class Medicine:
     name: str
     price: int
@@ -22,11 +21,15 @@ class Medicine:
     uses: int = field(default=0)
 
     def is_empty(self) -> bool:
-        """Проверяет, закончились ли использования лекарства."""
+        """
+        Проверяет, закончились ли использования лекарства.
+        """
         return self.uses >= self.number_of_uses
 
     def use(self) -> None:
-        """Увеличивает счётчик использований. Вызывает ошибку, если лекарство закончилось."""
+        """
+        Увеличивает счётчик использований. Вызывает ошибку, если лекарство закончилось.
+        """
         if self.is_empty():
             raise InvalidActionError("Лекарство закончилось.")
         self.uses += 1
