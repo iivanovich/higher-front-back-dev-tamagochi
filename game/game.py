@@ -8,6 +8,8 @@ from .tamagochi import AbstractTamagochi
 
 
 class AbstractGame(ABC):
+    """Абстрактный интерфейс для игры тамагочи-кликера."""
+
     @abstractmethod
     def __init__(
         self,
@@ -16,154 +18,169 @@ class AbstractGame(ABC):
         all_food: list[Food],
         all_medicine: list[Medicine],
     ) -> None:
-        pass
+        """Инициализация игры с питомцем, кликером, ассортиментом еды и лекарств."""
 
     @abstractmethod
     def work(self) -> int:
-        pass
+        """Работа: получение монет через кликер."""
 
     @abstractmethod
-    def buy_food(self, idx: int = 0) -> None:
-        pass
+    def buy_food(self) -> None:
+        """Купить порцию еды."""
 
     @abstractmethod
-    def buy_medicine(self, idx: int = 0) -> None:
-        pass
+    def buy_medicine(self) -> None:
+        """Купить лекарство."""
 
     @abstractmethod
-    def feed_tamagochi(self, idx: int = 0) -> None:
-        pass
+    def feed_tamagochi(self) -> None:
+        """Накормить питомца (выдать еду из инвентаря)."""
 
     @abstractmethod
-    def heal_tamagochi(self, idx: int = 0) -> None:
-        pass
+    def heal_tamagochi(self) -> None:
+        """Вылечить питомца (применить лекарство из инвентаря)."""
 
     @abstractmethod
     def rest_tamagochi(self) -> None:
-        pass
+        """Дать питомцу отдохнуть."""
 
     @abstractmethod
     def play_with_tamagochi(self) -> None:
-        pass
+        """Поиграть с питомцем."""
 
     @abstractmethod
-    def get_status(self) -> dict:
-        pass
+    def get_status(self) -> dict[str, int]:
+        """Получить статус: показатели питомца и количество монет."""
 
     @property
     @abstractmethod
     def food(self) -> list[Food]:
-        pass
+        """Возвращает текущий инвентарь еды."""
 
     @property
     @abstractmethod
     def medicine(self) -> list[Medicine]:
-        pass
+        """Возвращает текущий инвентарь лекарств."""
 
 class SimpleGame(AbstractGame):
+    """Основная логика игры: управление ресурсами и действиями."""
+
     def __init__(
         self,
-        tamagochi,
-        clicker,
-        all_food,
-        all_medicine,
-    ):
-        self._tamagochi = tamagochi
-        self._clicker = clicker
-        self._all_food = list(all_food)
-        self._all_medicine = list(all_medicine)
-        self._coins = START_COINS
-        self._inventory_food = []
-        self._inventory_medicine = []
+        tamagochi: AbstractTamagochi,
+        clicker: AbstractClicker,
+        all_food: list[Food],
+        all_medicine: list[Medicine],
+    ) -> None:
+        """
+        Инициализация игры с питомцем, кликером, ассортиментом еды и лекарств.
+        """
+        self.tamagochi = tamagochi
+        self.clicker = clicker
+        # Важно: делаем копии списков, чтобы не менять исходные коллекции
+        self.all_food = list(all_food)
+        self.all_medicine = list(all_medicine)
+        self.coins = START_COINS  # используем константу
+        self.inventory_food: list[Food] = []
+        self.inventory_medicine: list[Medicine] = []
 
-    @property
-    def tamagochi(self):
-        return self._tamagochi
-
-    def _ensure_alive(self):
-        if not self._tamagochi.is_alive():
+    def _ensure_alive(self) -> None:
+        """Проверяет, что питомец еще жив."""
+        if not self.tamagochi.is_alive():
             raise GameOverError("Игра окончена.")
 
     def work(self) -> int:
+        """Имитирует работу: использует кликер для получения монет."""
         self._ensure_alive()
-        self._clicker.click()
-        income = self._clicker.income_per_click
-        self._coins += income
-        self._tamagochi.update()
+        self.clicker.click()
+        income = self.clicker.income_per_click
+        self.coins += income
         return income
 
-    def buy_food(self, idx: int = 0) -> None:
+    def buy_food(self) -> None:
+        """Покупает одну порцию еды из списка доступных (первую)."""
         self._ensure_alive()
-        if not self._all_food:
+
+        if not self.all_food:
             raise InvalidActionError("Нет доступной еды для покупки.")
-        if not 0 <= idx < len(self._all_food):
-            raise InvalidActionError("Некорректный выбор еды.")
-        food_src = self._all_food[idx]
-        if self._coins < food_src.price:
+
+        food_to_buy = self.all_food[0]  # берём первую доступную
+
+        if self.coins < food_to_buy.price:
             raise NotEnoughMoney("Недостаточно монет.")
-        self._coins -= food_src.price
-        self._inventory_food.append(food_src)
 
-    def feed_tamagochi(self, idx: int = 0) -> None:
-        self._ensure_alive()
-        if not self._inventory_food:
-            raise InvalidActionError("Нет еды в инвентаре.")
-        if not 0 <= idx < len(self._inventory_food):
-            raise InvalidActionError("Некорректный выбор еды.")
-        food = self._inventory_food.pop(idx)
-        self._tamagochi.feed(food)
-        self._tamagochi.update()
+        self.coins -= food_to_buy.price
+        self.inventory_food.append(food_to_buy)
 
-    def buy_medicine(self, idx: int = 0) -> None:
+    def buy_medicine(self) -> None:
+        """Покупает одно лекарство из списка доступных (первое)."""
         self._ensure_alive()
-        if not self._all_medicine:
+
+        if not self.all_medicine:
             raise InvalidActionError("Нет доступных лекарств для покупки.")
-        if not 0 <= idx < len(self._all_medicine):
-            raise InvalidActionError("Некорректный выбор лекарства.")
-        med_src = self._all_medicine[idx]
-        if self._coins < med_src.price:
-            raise NotEnoughMoney("Недостаточно монет.")
-        self._coins -= med_src.price
-        self._inventory_medicine.append(Medicine(
-            name=med_src.name,
-            price=med_src.price,
-            heal_hp=med_src.heal_hp,
-            number_of_uses=med_src.number_of_uses,
-        ))
 
-    def heal_tamagochi(self, idx: int = 0) -> None:
+        med_to_buy = self.all_medicine[0]  # берём первое доступное
+
+        if self.coins < med_to_buy.price:
+            raise NotEnoughMoney("Недостаточно монет.")
+
+        self.coins -= med_to_buy.price
+        self.inventory_medicine.append(med_to_buy)
+
+    def feed_tamagochi(self) -> None:
+        """Кормит питомца из инвентаря (первой едой)."""
         self._ensure_alive()
-        if not self._inventory_medicine:
+
+        if not self.inventory_food:
+            raise InvalidActionError("Нет еды в инвентаре.")
+
+        food = self.inventory_food.pop(0)  # берём первую
+        self.tamagochi.feed(food)
+
+    def heal_tamagochi(self) -> None:
+        """Лечит питомца из инвентаря."""
+        self._ensure_alive()
+
+        if not self.inventory_medicine:
             raise InvalidActionError("Нет лекарств в инвентаре.")
-        if not 0 <= idx < len(self._inventory_medicine):
-            raise InvalidActionError("Некорректный выбор лекарства.")
-        medicine = self._inventory_medicine[idx]
+
+        medicine = self.inventory_medicine[0]
+
         if medicine.is_empty():
-            raise InvalidActionError("Это лекарство закончилось.")
-        self._tamagochi.heal(medicine)
-        if medicine.is_empty():
-            del self._inventory_medicine[idx]
-        self._tamagochi.update()
+            # Если первое лекарство кончилось, ищем следующее
+            found = False
+            for med in self.inventory_medicine:
+                if not med.is_empty():
+                    medicine = med
+                    found = True
+                    break
+            if not found:
+                raise InvalidActionError("Все лекарства закончились.")
+
+        self.tamagochi.heal(medicine)
 
     def rest_tamagochi(self) -> None:
+        """Позволяет питомцу отдохнуть."""
         self._ensure_alive()
-        self._tamagochi.rest()
-        self._tamagochi.update()
+        self.tamagochi.rest()
 
     def play_with_tamagochi(self) -> None:
+        """Играет с питомцем."""
         self._ensure_alive()
-        self._tamagochi.play()
-        self._tamagochi.update()
+        self.tamagochi.play()
 
-    def get_status(self) -> dict:
-        status = self._tamagochi.status()
-        status['coins'] = self._coins
+    def get_status(self) -> dict[str, int]:
+        """Получает статус игры: показатели питомца и монеты."""
+        status = self.tamagochi.status()
+        status["coins"] = self.coins
         return status
 
     @property
-    def food(self):
-        return list(self._inventory_food)
+    def food(self) -> list[Food]:
+        """Текущее содержимое инвентаря еды."""
+        return self.inventory_food
 
     @property
-    def medicine(self):
-        return list(self._inventory_medicine)
+    def medicine(self) -> list[Medicine]:
+        """Текущее содержимое инвентаря лекарств."""
+        return self.inventory_medicine
