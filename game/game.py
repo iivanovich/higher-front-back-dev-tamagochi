@@ -60,7 +60,6 @@ class AbstractGame(ABC):
     def medicine(self) -> list[Medicine]:
         pass
 
-
 class SimpleGame(AbstractGame):
     """Основная логика игры: управление ресурсами и действиями."""
 
@@ -88,50 +87,47 @@ class SimpleGame(AbstractGame):
             raise GameOverError("Игра окончена.")
 
     def work(self) -> int:
-        """Имитирует работу: использует кликер для получения монет."""
         self._ensure_alive()
         self._clicker.click()
         income = self._clicker.income_per_click
         self._coins += income
+        self._tamagochi.update()
         return income
 
     def buy_food(self, idx: int = 0) -> None:
-        """Покупает порцию еды по индексу."""
         self._ensure_alive()
         if not self._all_food:
             raise InvalidActionError("Нет доступной еды для покупки.")
         if not 0 <= idx < len(self._all_food):
             raise InvalidActionError("Некорректный выбор еды.")
-        food_to_buy = self._all_food[idx]
-        if self._coins < food_to_buy.price:
+        food_src = self._all_food[idx]
+        if self._coins < food_src.price:
             raise NotEnoughMoney("Недостаточно монет.")
-        self._coins -= food_to_buy.price
+        self._coins -= food_src.price
         self._inventory_food.append(Food(
-            name=food_to_buy.name,
-            satiety=food_to_buy.satiety,
-            price=food_to_buy.price
+            name=food_src.name,
+            satiety=food_src.satiety,
+            price=food_src.price
         ))
 
     def buy_medicine(self, idx: int = 0) -> None:
-        """Покупает лекарство по индексу."""
         self._ensure_alive()
         if not self._all_medicine:
             raise InvalidActionError("Нет доступных лекарств для покупки.")
         if not 0 <= idx < len(self._all_medicine):
             raise InvalidActionError("Некорректный выбор лекарства.")
-        med_to_buy = self._all_medicine[idx]
-        if self._coins < med_to_buy.price:
+        med_src = self._all_medicine[idx]
+        if self._coins < med_src.price:
             raise NotEnoughMoney("Недостаточно монет.")
-        self._coins -= med_to_buy.price
+        self._coins -= med_src.price
         self._inventory_medicine.append(Medicine(
-            name=med_to_buy.name,
-            price=med_to_buy.price,
-            heal_hp=med_to_buy.heal_hp,
-            number_of_uses=med_to_buy.number_of_uses,
+            name=med_src.name,
+            price=med_src.price,
+            heal_hp=med_src.heal_hp,
+            number_of_uses=med_src.number_of_uses,
         ))
 
     def feed_tamagochi(self, idx: int = 0) -> None:
-        """Кормит питомца из инвентаря по индексу."""
         self._ensure_alive()
         if not self._inventory_food:
             raise InvalidActionError("Нет еды в инвентаре.")
@@ -140,9 +136,9 @@ class SimpleGame(AbstractGame):
         food = self._inventory_food[idx]
         self._tamagochi.feed(food)
         del self._inventory_food[idx]
+        self._tamagochi.update()
 
     def heal_tamagochi(self, idx: int = 0) -> None:
-        """Лечит питомца из инвентаря по индексу."""
         self._ensure_alive()
         if not self._inventory_medicine:
             raise InvalidActionError("Нет лекарств в инвентаре.")
@@ -154,27 +150,27 @@ class SimpleGame(AbstractGame):
         self._tamagochi.heal(medicine)
         if medicine.is_empty():
             del self._inventory_medicine[idx]
+        self._tamagochi.update()
 
     def rest_tamagochi(self) -> None:
-        """Позволяет питомцу отдохнуть."""
         self._ensure_alive()
         self._tamagochi.rest()
+        self._tamagochi.update()
 
     def play_with_tamagochi(self) -> None:
-        """Играет с питомцем."""
         self._ensure_alive()
         self._tamagochi.play()
+        self._tamagochi.update()
 
     def get_status(self) -> dict[str, int]:
-        """Получает статус игры: показатели питомца и монеты."""
         status = self._tamagochi.status()
         status["coins"] = self._coins
         return status
 
     @property
     def food(self) -> list[Food]:
-        return self._inventory_food
+        return list(self._inventory_food)
 
     @property
     def medicine(self) -> list[Medicine]:
-        return self._inventory_medicine
+        return list(self._inventory_medicine)

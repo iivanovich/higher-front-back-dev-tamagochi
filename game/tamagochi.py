@@ -53,7 +53,7 @@ class SimpleTamagochi(AbstractTamagochi):
 
     def __init__(self, name: str = "Питомец") -> None:
         self._name = name
-        self._hunger = 50  # Значения контролируем константами (см. правку ниже)
+        self._hunger = 50
         self._hp = MAX_HP
         self._energy = MAX_ENERGY
         self._fatigue = 0
