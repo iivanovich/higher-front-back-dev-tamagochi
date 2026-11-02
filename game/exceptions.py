@@ -20,3 +20,7 @@ class TamagochiIsGone(Exception):
     """
     Исключение для случая, когда питомец мёртв и действия невозможны.
     """
+
+    
+class MedicineIsGone(Exception):
+    """Лекарство закончилось."""
