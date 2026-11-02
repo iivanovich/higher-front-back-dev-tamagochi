@@ -1,15 +1,14 @@
 class GameOverError(Exception):
-    """Исключение: игра окончена."""
-    """Используется, когда игра завершена."""
+    pass
+
+class NotEnoughMoneyError(Exception):
+    pass
 
 class InvalidActionError(Exception):
-    """Исключение: действие невозможно."""
-    """Используется, когда действие невозможно выполнить."""
-
-class NotEnoughMoney(Exception):
-    """Исключение: не хватает денег."""
-    """Используется при недостатке монет."""
+    pass
 
 class TamagochiIsGone(Exception):
-    """Исключение: питомец умер/пропал."""
-    """Используется, когда питомец ушел или умер."""
+    """Исключение, когда питомец умер."""
+
+class NotEnoughMoney(Exception):
+    """Исключение для случаев нехватки денег."""

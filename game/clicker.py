@@ -5,15 +5,12 @@ from abc import ABC, abstractmethod
 class AbstractClicker(ABC):
     @abstractmethod
     def click(self) -> None:
-        """Выполнить клик и обновить доход."""
-        """Абстрактный метод, который должен реализовывать клик."""
+        pass
 
     @property
     @abstractmethod
     def income_per_click(self) -> int:
-        """Вернуть текущий доход за клик."""
-        """Абстрактное свойство: возвращает текущий доход за клик."""
-
+        pass
 
 class SimpleRandomClicker(AbstractClicker):
     """Кликер, который приносит случайное количество монет в заданном диапазоне."""
@@ -31,5 +28,5 @@ class SimpleRandomClicker(AbstractClicker):
         return self._current_income
 
     def click(self) -> None:
-        """Выполняет клик и обновляет доход случайным значением в диапазоне."""
+        """Выполняет клик и обновляет доход."""
         self._current_income = random.randint(self._min_income, self._max_income)

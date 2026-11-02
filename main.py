@@ -1,9 +1,11 @@
-# main.py
-
 import os
 
 from game.clicker import SimpleRandomClicker
-from game.exceptions import GameOverError, InvalidActionError, NotEnoughMoney
+from game.exceptions import (
+    GameOverError,
+    InvalidActionError,
+    NotEnoughMoneyError,
+)
 from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
@@ -13,15 +15,15 @@ def main():
     all_food = [
         Food(name="Яблоко", satiety=20, price=40),
         Food(name="Банан", satiety=10, price=20),
-        Food(name="Печенье", satiety=10, price=15),
-        Food(name="Сэндвич", satiety=8, price=12),
-        Food(name="Пицца", satiety=15, price=25),
+        Food(name="Груша", satiety=10, price=15),
+        Food(name="Морковь", satiety=8, price=12),
+        Food(name="Соевый батончик", satiety=15, price=25),
     ]
 
     all_medicine = [
-        Medicine(name="Анальгин", price=30, heal_hp=20, number_of_uses=2),
+        Medicine(name="Антибиотик", price=30, heal_hp=20, number_of_uses=2),
         Medicine(name="Витамин C", price=25, heal_hp=10, number_of_uses=3),
-        Medicine(name="Суперлекарство", price=60, heal_hp=40, number_of_uses=1),
+        Medicine(name="Супер-лекарство", price=60, heal_hp=40, number_of_uses=1),
     ]
 
     tamagochi = SimpleTamagochi(name="Котёнок")
@@ -33,13 +35,15 @@ def main():
         all_medicine=all_medicine,
     )
 
-    print("Добро пожаловать в консольный Тамагочи-кликер!")
+    print("Добро пожаловать в текстовый Тамагочи-кликер!")
     output = ""
 
     while True:
+        # Очищаем экран перед обновлением информации
         os.system("clear" if os.name != "nt" else "cls")
+
         print(output)
-        output = ""
+        output = ""  # Очищаем старый вывод
 
         print(f"Еда в инвентаре: {[f.name for f in game.food]}")
         print(f"Лекарства в инвентаре: {[m.name for m in game.medicine]}")
@@ -47,38 +51,35 @@ def main():
         try:
             status = game.get_status()
         except GameOverError:
-            print("\n😵 Игра окончена: ваш питомец погиб.")
+            print("\n❌ Игра окончена: ваш питомец погиб.")
             break
 
         print(
-            f"\nПоказатели: голод {status['hunger']}, здоровье {status['hp']}, "
+            f"\nСтатус: голод {status['hunger']}, здоровье {status['hp']}, "
             f"энергия {status['energy']}, монеты {status['coins']}\n"
         )
 
-        if tamagochi.is_sick():
-            print("======= ВНИМАНИЕ: питомец болен! =======")
-            print("======= Для восстановления здоровья используйте лекарство. =======")
+        if game.tamagochi.is_sick():
+            print("======= Питомец болен! =======")
+            print("======= Лечение необходимо как можно скорее. =======")
 
-        menu_lines = [
-            "1. Поработать (заработать монеты)",
-            "2. Купить еду",
-            "3. Купить лекарство",
-            "4. Покормить питомца",
-            "5. Полечить питомца",
-            "6. Поиграть с питомцем",
-            "7. Отдохнуть (сон)",
-            "0. Выйти из игры",
-        ]
-        print("\n".join(menu_lines))
+        print("1. Работать (заработать монеты)")
+        print("2. Купить еду")
+        print("3. Купить лекарство")
+        print("4. Покормить питомца")
+        print("5. Вылечить питомца")
+        print("6. Поиграть с питомцем")
+        print("7. Отдохнуть")
+        print("0. Выйти")
 
-        choice = input("Введите номер действия: ").strip()
+        choice = input("Выберите действие: ").strip()
 
         try:
             match choice:
                 case "1":
                     income = game.work()
                     output = f"Вы заработали {income} монет."
-                    tamagochi.update()
+                    game.tamagochi.update()
                 case "2":
                     game.buy_food()
                     output = "Еда куплена."
@@ -99,15 +100,15 @@ def main():
                     output = "Питомец отдохнул."
                 case "0":
                     print("До свидания!")
-                    return
+                    break
                 case _:
-                    output = "Нет такого действия, выберите другой пункт меню."
-        except ValueError:
-            output = "Ошибка ввода, попробуйте снова."
-        except (InvalidActionError, NotEnoughMoney) as e:
-            output = str(e)
+                    output = "Некорректный выбор. Введите число от 0 до 7."
+        except NotEnoughMoneyError:
+            output = "❗ Недостаточно монет для покупки."
+        except InvalidActionError as e:
+            output = f"❗ Действие невозможно: {e}"
         except GameOverError:
-            print("\n😵 Игра окончена: ваш питомец погиб.")
+            print("\n❌ Игра окончена: ваш питомец погиб.")
             break
 
 if __name__ == "__main__":
