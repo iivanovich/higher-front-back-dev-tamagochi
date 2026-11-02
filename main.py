@@ -55,8 +55,8 @@ def main() -> None:
     while True:
         print(output)
 
-        print(f'Сумка с едой: {game.food}')
-        print(f'Сумка с лекарствами: {game.medicine}')
+        print(f'Сумка с едой: {game.food()}')
+        print(f'Сумка с лекарствами: {game.medicine()}')
 
         status = game.get_status()
         print(
@@ -65,7 +65,7 @@ def main() -> None:
         )
         if game.tamagochi.is_sick():
             print(constants.SICK_WARNING)
-        if status['game_over']:
+        if not game.tamagochi.is_alive():
             print(constants.DEAD_TAMAGOCHI_MESSAGE)
             break
 

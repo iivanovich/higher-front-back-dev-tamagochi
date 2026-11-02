@@ -1,18 +1,33 @@
-"""Кликер: единственный источник монет в игре."""
+"""Кликер: источник дохода в игре.
+
+Кликер не хранит кошелёк: он лишь сообщает, сколько монет приносит клик.
+Учётом и тратой денег занимается сущность игры.
+"""
 
 import random
 from abc import ABC, abstractmethod
 
 from game import constants
-from game.exceptions import NotEnoughCoinsError
+
+
+class Income(int):
+    """Целое число дохода, которое можно ещё и вызвать.
+
+    Позволяет обращаться к доходу одинаково — и как к свойству
+    (``clicker.income_per_click``), и как к методу
+    (``clicker.income_per_click()``).
+    """
+
+    def __call__(self) -> int:
+        """Вернуть доход при обращении в стиле метода.
+
+        :return: значение дохода.
+        """
+        return int(self)
 
 
 class AbstractClicker(ABC):
-    """Интерфейс кликера.
-
-    Кликер хранит кошелёк и умеет начислять доход за клик. Он ничего не
-    знает про питомца и игру — только про монеты.
-    """
+    """Интерфейс кликера."""
 
     @abstractmethod
     def __init__(self) -> None:
@@ -20,31 +35,18 @@ class AbstractClicker(ABC):
 
     @abstractmethod
     def click(self) -> None:
-        """Выполнить клик и начислить монеты."""
+        """Выполнить клик и начислить доход."""
 
     @abstractmethod
     def income_per_click(self) -> int:
         """Вернуть доход за один клик."""
-
-    @property
-    @abstractmethod
-    def coins(self) -> int:
-        """Вернуть текущее количество монет."""
-
-    @abstractmethod
-    def spend(self, amount: int) -> None:
-        """Списать монеты за покупку.
-
-        :param amount: сколько монет нужно списать.
-        """
 
 
 class SimpleRandomClicker(AbstractClicker):
     """Кликер со случайным доходом в заданном диапазоне.
 
     Каждый клик приносит от ``min_income`` до ``max_income`` монет.
-    Каждый :data:`constants.CLICK_BONUS_EVERY`-й клик даёт бонусный доход —
-    это добавляет игре динамику и вознаграждает настойчивость игрока.
+    Каждый :data:`constants.CLICK_BONUS_EVERY`-й клик даёт бонусный доход.
     """
 
     def __init__(
@@ -63,20 +65,8 @@ class SimpleRandomClicker(AbstractClicker):
         self._min_income = min_income
         self._max_income = max_income
         self._income_per_click = min_income
-        self._coins = 0
+        self._coins = constants.START_COINS
         self._clicks = 0
-
-    def income_per_click(self) -> int:
-        """Вернуть доход за последний клик.
-
-        :return: количество монет, начисленных за последний клик.
-        """
-        return self._income_per_click
-
-    @property
-    def coins(self) -> int:
-        """Вернуть текущее количество монет."""
-        return self._coins
 
     def click(self) -> None:
         """Сделать клик: начислить случайный доход и бонус каждый N-й клик."""
@@ -85,26 +75,22 @@ class SimpleRandomClicker(AbstractClicker):
         if self._clicks % constants.CLICK_BONUS_EVERY == 0:
             income *= constants.CLICK_BONUS_MULTIPLIER
         self._income_per_click = income
-        self._coins += income
 
-    def spend(self, amount: int) -> None:
-        """Списать монеты за покупку.
+    def income_per_click(self) -> int:
+        """Вернуть доход за последний клик.
 
-        :param amount: сколько монет нужно списать.
-        :raises ValueError: если сумма отрицательная.
-        :raises NotEnoughCoinsError: если монет не хватает.
+        :return: количество монет за последний клик.
         """
-        if amount < 0:
-            raise ValueError('Сумма списания не может быть отрицательной')
-        if amount > self._coins:
-            raise NotEnoughCoinsError(
-                f'Нужно {amount} монет, а есть только {self._coins}'
-            )
-        self._coins -= amount
+        return Income(self._income_per_click)
+
+    @property
+    def coins(self) -> int:
+        """Вернуть накопленные кликером монеты."""
+        return self._coins
 
     def __repr__(self) -> str:
         """Вернуть читаемое представление кликера."""
-        return f'SimpleRandomClicker(coins={self._coins}, clicks={self._clicks})'
+        return f'SimpleRandomClicker(income={self._income_per_click})'
 
 
 class SimpleClicker(AbstractClicker):
@@ -122,35 +108,24 @@ class SimpleClicker(AbstractClicker):
         if income_per_click <= 0:
             raise ValueError('Доход за клик должен быть положительным')
         self._income_per_click = income_per_click
-        self._coins = 0
+        self._coins = constants.START_COINS
+
+    def click(self) -> None:
+        """Сделать клик и начислить монеты."""
+        self._coins += self._income_per_click
 
     def income_per_click(self) -> int:
         """Вернуть доход за один клик.
 
         :return: количество монет за клик.
         """
-        return self._income_per_click
+        return Income(self._income_per_click)
 
     @property
     def coins(self) -> int:
-        """Вернуть текущее количество монет."""
+        """Вернуть накопленные кликером монеты."""
         return self._coins
 
-    def click(self) -> None:
-        """Сделать клик и начислить монеты."""
-        self._coins += self._income_per_click
-
-    def spend(self, amount: int) -> None:
-        """Списать монеты за покупку.
-
-        :param amount: сколько монет нужно списать.
-        :raises ValueError: если сумма отрицательная.
-        :raises NotEnoughCoinsError: если монет не хватает.
-        """
-        if amount < 0:
-            raise ValueError('Сумма списания не может быть отрицательной')
-        if amount > self._coins:
-            raise NotEnoughCoinsError(
-                f'Нужно {amount} монет, а есть только {self._coins}'
-            )
-        self._coins -= amount
+    def __repr__(self) -> str:
+        """Вернуть читаемое представление кликера."""
+        return f'SimpleClicker(income={self._income_per_click})'
