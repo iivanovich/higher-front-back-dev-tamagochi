@@ -101,7 +101,10 @@ class SimpleGame(AbstractGame):
         if self.coins < food_to_buy.price:
             raise NotEnoughMoney("Недостаточно монет.")
         self.coins -= food_to_buy.price
-        self.inventory_food.append(self.all_food[0])
+        # Добавляем НОВЫЙ ОБЪЕКТ еды, а не ссылку на существующий!
+        self.inventory_food.append(
+            Food(name=food_to_buy.name, satiety=food_to_buy.satiety, price=food_to_buy.price)
+        )
 
     def buy_medicine(self) -> None:
         """Покупает одно лекарство из списка доступных (первое)."""
