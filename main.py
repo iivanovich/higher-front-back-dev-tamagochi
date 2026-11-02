@@ -1,20 +1,13 @@
 import os
 
 from game.clicker import SimpleRandomClicker
-from game.exceptions import (
-    GameOverError,
-    InvalidActionError,
-    NotEnoughMoney,
-    TamagochiIsGone,
-)
+from game.exceptions import GameOverError, InvalidActionError, NotEnoughMoney
 from game.game import SimpleGame
 from game.models import Food, Medicine
 from game.tamagochi import SimpleTamagochi
 
-WELCOME_TEXT = "Добро пожаловать в игру Тамагочи-кликер!"
 
 def main():
-    """Запуск текстового интерфейса для игры в Тамагочи-кликера."""
     all_food = [
         Food(name="Яблоко", satiety=20, price=40),
         Food(name="Банан", satiety=10, price=20),
@@ -26,7 +19,7 @@ def main():
     all_medicine = [
         Medicine(name="Антибиотик", price=30, heal_hp=20, number_of_uses=2),
         Medicine(name="Витамин C", price=25, heal_hp=10, number_of_uses=3),
-        Medicine(name="Болитголовой", price=60, heal_hp=40, number_of_uses=1),
+        Medicine(name="Эликсир Здоровья", price=60, heal_hp=40, number_of_uses=1),
     ]
 
     tamagochi = SimpleTamagochi(name="Котик")
@@ -38,7 +31,7 @@ def main():
         all_medicine=all_medicine,
     )
 
-    print(WELCOME_TEXT)
+    print("Добро пожаловать в игру Тамагочи-кликер!")
     output = ""
 
     while True:
@@ -111,7 +104,7 @@ def main():
             output = "Ошибка ввода!"
         except (InvalidActionError, NotEnoughMoney) as e:
             output = str(e)
-        except (GameOverError, TamagochiIsGone):
+        except GameOverError:
             print("\nИгра окончена: ваш питомец погиб.")
             break
 

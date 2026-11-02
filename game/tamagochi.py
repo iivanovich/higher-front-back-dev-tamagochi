@@ -20,7 +20,7 @@ from .models import Food, Medicine
 
 
 class AbstractTamagochi(ABC):
-    """Абстрактный интерфейс для питомца (тамагочи)."""
+    """Абстрактный класс для питомца."""
 
     @abstractmethod
     def feed(self, food: Food) -> None:
@@ -29,7 +29,7 @@ class AbstractTamagochi(ABC):
 
     @abstractmethod
     def play(self) -> None:
-        """Играет с питомцем, увеличивая усталость и голод."""
+        """Играет с питомцем, увеличивает усталость и голод."""
         ...
 
     @abstractmethod
@@ -39,7 +39,7 @@ class AbstractTamagochi(ABC):
 
     @abstractmethod
     def heal(self, medicine: Medicine) -> None:
-        """Лечит питомца выбранным лекарством."""
+        """Лечит питомца с помощью выбранного лекарства."""
         ...
 
     @abstractmethod
@@ -49,17 +49,17 @@ class AbstractTamagochi(ABC):
 
     @abstractmethod
     def is_alive(self) -> bool:
-        """Показывает, жив ли питомец."""
+        """Возвращает True, если питомец жив."""
         ...
 
     @abstractmethod
     def is_sick(self) -> bool:
-        """Показывает, болен ли питомец."""
+        """Возвращает True, если питомец болен."""
         ...
 
     @abstractmethod
     def update(self) -> None:
-        """Обновляет внутренние параметры питомца (или применяет эффекты времени)."""
+        """Обновляет внутреннее состояние питомца."""
         ...
 
 class SimpleTamagochi(AbstractTamagochi):
@@ -94,7 +94,6 @@ class SimpleTamagochi(AbstractTamagochi):
         """Игра с питомцем: тратит энергию, повышает голод и усталость."""
         if not self.is_alive():
             raise TamagochiIsGone("Питомец умер, играть нельзя.")
-
         self._energy = self._clamp(self._energy - 15, MIN_ENERGY, MAX_ENERGY)
         self._hunger = self._clamp(self._hunger + 10, MIN_HUNGER, MAX_HUNGER)
         self._fatigue = self._clamp(self._fatigue + 20, MIN_FATIGUE, MAX_FATIGUE)
@@ -149,7 +148,6 @@ class SimpleTamagochi(AbstractTamagochi):
         self._hunger = self._clamp(self._hunger + 5, MIN_HUNGER, MAX_HUNGER)
         self._energy = self._clamp(self._energy - 5, MIN_ENERGY, MAX_ENERGY)
         self._fatigue = self._clamp(self._fatigue + 3, MIN_FATIGUE, MAX_FATIGUE)
-
         if not self._sick and (self._fatigue > 80 or self._hp < 40) and random.random() < 0.3:
             self._sick = True
         if self._sick:

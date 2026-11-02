@@ -8,21 +8,17 @@ class AbstractClicker(ABC):
     @abstractmethod
     def click(self) -> None:
         """Выполнить клик и обновить доход."""
-        ...
 
     @property
     @abstractmethod
     def income_per_click(self) -> int:
         """Вернуть текущий доход за клик."""
-        ...
 
 class SimpleRandomClicker(AbstractClicker):
     """Кликер, который приносит случайное количество монет в заданном диапазоне."""
 
     def __init__(self, min_income: int, max_income: int) -> None:
-        """
-        Создаёт кликер с заданным диапазоном дохода.
-        """
+        """Создаёт кликер с заданным диапазоном дохода."""
         if min_income < 0 or max_income < 0 or min_income > max_income:
             raise ValueError("min_income и max_income должны быть неотрицательными, min <= max.")
         self._min_income = min_income

@@ -5,7 +5,6 @@ from .exceptions import InvalidActionError
 
 @dataclass
 class Food:
-    """Модель еды."""
     name: str
     satiety: int
     price: int
@@ -15,7 +14,6 @@ class Food:
 
 @dataclass
 class Medicine:
-    """Модель лекарства."""
     name: str
     price: int
     heal_hp: int

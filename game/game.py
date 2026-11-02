@@ -8,7 +8,6 @@ from .tamagochi import AbstractTamagochi
 
 
 class AbstractGame(ABC):
-    """Абстрактная логика игры Тамагочи."""
 
     @abstractmethod
     def __init__(
@@ -18,49 +17,49 @@ class AbstractGame(ABC):
         all_food: list[Food],
         all_medicine: list[Medicine],
     ) -> None:
-        ...
+        pass
 
     @abstractmethod
     def work(self) -> int:
-        ...
+        pass
 
     @abstractmethod
     def buy_food(self) -> None:
-        ...
+        pass
 
     @abstractmethod
     def buy_medicine(self) -> None:
-        ...
+        pass
 
     @abstractmethod
     def feed_tamagochi(self) -> None:
-        ...
+        pass
 
     @abstractmethod
     def heal_tamagochi(self) -> None:
-        ...
+        pass
 
     @abstractmethod
     def rest_tamagochi(self) -> None:
-        ...
+        pass
 
     @abstractmethod
     def play_with_tamagochi(self) -> None:
-        ...
+        pass
 
     @abstractmethod
     def get_status(self) -> dict[str, int]:
-        ...
+        pass
 
     @property
     @abstractmethod
     def food(self) -> list[Food]:
-        ...
+        pass
 
     @property
     @abstractmethod
     def medicine(self) -> list[Medicine]:
-        ...
+        pass
 
 class SimpleGame(AbstractGame):
     """Основная логика игры: управление ресурсами и действиями."""
@@ -74,6 +73,7 @@ class SimpleGame(AbstractGame):
     ) -> None:
         self.tamagochi = tamagochi
         self.clicker = clicker
+        # Важно: делаем копии списков, чтобы не менять исходные коллекции
         self.all_food = list(all_food)
         self.all_medicine = list(all_medicine)
         self.coins = START_COINS
@@ -129,11 +129,13 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Нет лекарств в инвентаре.")
         medicine = self.inventory_medicine[0]
         if medicine.is_empty():
+            found = False
             for med in self.inventory_medicine:
                 if not med.is_empty():
                     medicine = med
+                    found = True
                     break
-            else:
+            if not found:
                 raise InvalidActionError("Все лекарства закончились.")
         self.tamagochi.heal(medicine)
 
@@ -155,10 +157,8 @@ class SimpleGame(AbstractGame):
 
     @property
     def food(self) -> list[Food]:
-        """Текущее содержимое инвентаря еды."""
         return self.inventory_food
 
     @property
     def medicine(self) -> list[Medicine]:
-        """Текущее содержимое инвентаря лекарств."""
         return self.inventory_medicine
