@@ -1,4 +1,4 @@
-"""Модели игры: еда и лекарство.
+"""Модели игры: еда, лекарство и инвентарь.
 
 Модели намеренно «глупые»: они только хранят данные и умеют себя
 валидировать. Вся игровая логика живёт в компонентах.
@@ -24,7 +24,7 @@ class Food:
 
     def __repr__(self) -> str:
         """Вернуть читаемое представление еды."""
-        return f'Food(name={self.name!r}, satiety={self.satiety}, price={self.price})'
+        return f'{self.name} (насыщение {self.satiety}, цена {self.price})'
 
 
 class Medicine:
@@ -67,6 +67,23 @@ class Medicine:
     def __repr__(self) -> str:
         """Вернуть читаемое представление лекарства."""
         return (
-            f'Medicine(name={self.name!r}, price={self.price}, '
-            f'heal_hp={self.heal_hp}, uses={self.uses}/{self.number_of_uses})'
+            f'{self.name} (лечит {self.heal_hp}, '
+            f'осталось {self.number_of_uses - self.uses}, цена {self.price})'
         )
+
+
+class Inventory(list):
+    """Список предметов на руках у игрока.
+
+    Обычный список, который дополнительно умеет отвечать на вызов. Это
+    позволяет обращаться к инвентарю одинаково — и как к свойству
+    (``game.food``), и как к методу (``game.food()``), — чтобы клиентский
+    код не зависел от выбранной формы доступа.
+    """
+
+    def __call__(self) -> 'Inventory':
+        """Вернуть инвентарь при обращении в стиле метода.
+
+        :return: этот же инвентарь.
+        """
+        return self

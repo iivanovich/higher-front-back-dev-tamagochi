@@ -9,25 +9,21 @@ class GameError(Exception):
     """Базовое исключение для всех ошибок игры."""
 
 
-class NotEnoughCoinsError(GameError):
+class NotEnoughMoney(GameError):
     """Не хватает монет для покупки."""
 
 
-class TamagochiIsDeadError(GameError):
+class TamagochiIsGone(GameError):
     """Действие невозможно: питомец уже погиб."""
 
 
-class TamagochiIsNotSickError(GameError):
-    """Питомца нельзя лечить: он здоров."""
-
-
-class EmptyMedicineError(GameError):
+class EmptyMedicine(GameError):
     """Лекарство закончилось: использований не осталось."""
 
 
-class EmptyInventoryError(GameError):
-    """В сумке нет подходящего предмета (еды или лекарства)."""
+class EmptyInventory(GameError):
+    """В сумке или в магазине нет подходящего предмета."""
 
 
-class InvalidChoiceError(GameError):
+class InvalidChoice(GameError):
     """Выбран несуществующий индекс при выборе еды или лекарства."""
