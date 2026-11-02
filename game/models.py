@@ -12,7 +12,6 @@ class Food:
     _identity: str = field(default_factory=lambda: str(uuid.uuid4()))
 
     def __eq__(self, other):
-        # Уникальна по identity (для автотеста)
         if not isinstance(other, Food):
             return False
         return self._identity == other._identity

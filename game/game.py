@@ -131,9 +131,8 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Нет еды в инвентаре.")
         if not 0 <= idx < len(self._inventory_food):
             raise InvalidActionError("Некорректный выбор еды.")
-        food = self._inventory_food[idx]
+        food = self._inventory_food.pop(idx)
         self._tamagochi.feed(food)
-        del self._inventory_food[idx]
         self._tamagochi.update()
 
     def heal_tamagochi(self, idx: int = 0) -> None:
