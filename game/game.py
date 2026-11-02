@@ -1,4 +1,3 @@
-import copy
 from abc import ABC, abstractmethod
 from copy import deepcopy
 
@@ -131,6 +130,9 @@ class SimpleGame(AbstractGame):
         return income
 
     def buy_food(self, idx: int = 0) -> None:
+        """
+        Покупает еду из списка доступных по индексу и КЛАДЁТ В ИНВЕНТАРЬ НОВЫЙ ОБЪЕКТ.
+        """
         self._ensure_alive()
         if not self._all_food:
             raise InvalidActionError("Нет доступной еды для покупки.")
@@ -140,7 +142,10 @@ class SimpleGame(AbstractGame):
         if self._coins < food_to_buy.price:
             raise NotEnoughMoney("Недостаточно монет.")
         self._coins -= food_to_buy.price
-        self._inventory_food.append(copy.deepcopy(food_to_buy)) 
+        # Кладём новый Food (копируем все атрибуты, а не deepcopy)
+        self._inventory_food.append(
+            Food(name=food_to_buy.name, satiety=food_to_buy.satiety, price=food_to_buy.price)
+        )
 
     def buy_medicine(self, idx: int = 0) -> None:
         """
@@ -167,7 +172,7 @@ class SimpleGame(AbstractGame):
             raise InvalidActionError("Некорректный выбор еды для кормления.")
         food = self._inventory_food[idx]
         self.tamagochi.feed(food)
-        del self._inventory_food[idx] 
+        del self._inventory_food[idx]
         self.tamagochi.update()
 
     def heal_tamagochi(self, idx: int = 0) -> None:
