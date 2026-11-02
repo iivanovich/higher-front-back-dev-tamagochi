@@ -1,11 +1,33 @@
-class GameOverError(Exception):
-    """Вызывается, когда игра завершена из-за смерти питомца."""
+"""Кастомные исключения игры «Тамагочи».
 
-class InvalidActionError(Exception):
-    """Вызывается при недопустимом действии в игре."""
+Все ошибки наследуются от общего базового класса :class:`GameError`,
+поэтому клиентский код может ловить их как по отдельности, так и пачкой.
+"""
 
-class NotEnoughMoney(Exception):
-    """Вызывается, если пользователю не хватает монет."""
 
-class TamagochiIsGone(Exception):
-    """Вызывается, если питомец умер и любое действие невозможно."""
+class GameError(Exception):
+    """Базовое исключение для всех ошибок игры."""
+
+
+class NotEnoughCoinsError(GameError):
+    """Не хватает монет для покупки."""
+
+
+class TamagochiIsDeadError(GameError):
+    """Действие невозможно: питомец уже погиб."""
+
+
+class TamagochiIsNotSickError(GameError):
+    """Питомца нельзя лечить: он здоров."""
+
+
+class EmptyMedicineError(GameError):
+    """Лекарство закончилось: использований не осталось."""
+
+
+class EmptyInventoryError(GameError):
+    """В сумке нет подходящего предмета (еды или лекарства)."""
+
+
+class InvalidChoiceError(GameError):
+    """Выбран несуществующий индекс при выборе еды или лекарства."""
