@@ -1,34 +1,37 @@
 from abc import ABC, abstractmethod
 
+from .clicker import AbstractClicker
 from .constants import START_COINS
 from .exceptions import GameOverError, InvalidActionError, NotEnoughMoney
 from .models import Food, Medicine
+from .tamagochi import AbstractTamagochi
 
 
 class AbstractGame(ABC):
     @abstractmethod
-    def __init__(self, tamagochi, clicker, all_food, all_medicine):
+    def __init__(
+        self,
+        tamagochi: AbstractTamagochi,
+        clicker: AbstractClicker,
+        all_food: list[Food],
+        all_medicine: list[Medicine],
+    ) -> None:
         """Интерфейс игры"""
 
     @abstractmethod
-    def work(self) -> int:
-        """Работа"""
+    def work(self) -> int: ...
 
     @abstractmethod
-    def buy_food(self, idx: int = 0) -> None:
-        """Покупка еды"""
+    def buy_food(self, idx: int = 0) -> None: ...
 
     @abstractmethod
-    def buy_medicine(self, idx: int = 0) -> None:
-        """Покупка лекарства"""
+    def buy_medicine(self, idx: int = 0) -> None: ...
 
     @abstractmethod
-    def feed_tamagochi(self, idx: int = 0) -> None:
-        """Кормление питомца"""
+    def feed_tamagochi(self, idx: int = 0) -> None: ...
 
     @abstractmethod
-    def heal_tamagochi(self, idx: int = 0) -> None:
-        """Лечение питомца"""
+    def heal_tamagochi(self, idx: int = 0) -> None: ...
 
     @abstractmethod
     def rest_tamagochi(self) -> None: ...
@@ -47,11 +50,16 @@ class AbstractGame(ABC):
     @abstractmethod
     def medicine(self) -> list[Medicine]: ...
 
-
 class SimpleGame(AbstractGame):
-    """Основная логика игры"""
+    """Основная логика игры: управление ресурсами и действиями."""
 
-    def __init__(self, tamagochi, clicker, all_food, all_medicine):
+    def __init__(
+        self,
+        tamagochi: AbstractTamagochi,
+        clicker: AbstractClicker,
+        all_food: list[Food],
+        all_medicine: list[Medicine],
+    ) -> None:
         self._tamagochi = tamagochi
         self._clicker = clicker
         self._all_food = list(all_food)
@@ -86,7 +94,6 @@ class SimpleGame(AbstractGame):
         if self._coins < food_src.price:
             raise NotEnoughMoney("Недостаточно монет.")
         self._coins -= food_src.price
-        # кладём копию объекта!
         self._inventory_food.append(Food(name=food_src.name, satiety=food_src.satiety, price=food_src.price))
 
     def buy_medicine(self, idx: int = 0) -> None:
