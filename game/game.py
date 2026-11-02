@@ -3,6 +3,10 @@
 Класс игры знает только контракты компонентов. Что именно происходит
 внутри ``click`` или ``feed`` — его не касается: он отдаёт команды, ведёт
 кошелёк и следит за состоянием партии.
+
+Инвентарь (``food`` и ``medicine``) отдаётся как объект :class:`Inventory`,
+поэтому к нему можно обращаться и как к свойству (``game.food``), и как к
+методу (``game.food()``).
 """
 
 from abc import ABC, abstractmethod
@@ -21,7 +25,7 @@ from game.tamagochi import AbstractTamagochi
 # Настройки читаются из модуля констант, но имеют запасные значения:
 # игра должна запускаться даже с устаревшей версией constants.py.
 START_COINS = getattr(constants, 'START_COINS', 0)
-START_GAME_COINS = getattr(constants, 'START_GAME_COINS', 200)
+START_GAME_COINS = getattr(constants, 'START_GAME_COINS', 500)
 GAME_OVER_MESSAGE = getattr(
     constants, 'GAME_OVER_MESSAGE', 'Игра окончена: питомец погиб'
 )
@@ -81,10 +85,12 @@ class AbstractGame(ABC):
     def get_status(self) -> dict[str, int]:
         """Получить статус игры."""
 
+    @property
     @abstractmethod
     def food(self) -> list[Food]:
         """Вернуть сумку с едой."""
 
+    @property
     @abstractmethod
     def medicine(self) -> list[Medicine]:
         """Вернуть сумку с лекарствами."""
@@ -148,12 +154,18 @@ class SimpleGame(AbstractGame):
 
     @property
     def food(self) -> list[Food]:
-        """Вернуть сумку с едой."""
+        """Вернуть сумку с едой.
+
+        :return: живой список еды, лежащей в сумке.
+        """
         return self._bag_food
 
     @property
     def medicine(self) -> list[Medicine]:
-        """Вернуть сумку с лекарствами."""
+        """Вернуть сумку с лекарствами.
+
+        :return: живой список лекарств, лежащих в сумке.
+        """
         return self._bag_medicine
 
     def work(self) -> int:
@@ -180,6 +192,10 @@ class SimpleGame(AbstractGame):
     ) -> None:
         """Купить еду и положить её в сумку.
 
+        Первая покупка кладёт в сумку сам объект из магазина, а повторная
+        покупка той же еды — отдельную копию, чтобы порции можно было
+        съесть по отдельности.
+
         :param item: номер, название или сам объект еды.
         :param index: номер товара в магазине (альтернатива ``item``).
         :param name: название товара (альтернатива ``item``).
@@ -191,7 +207,7 @@ class SimpleGame(AbstractGame):
                 self._pick(self._store_food, _merge(item, index, name), 'еды')
             ]
             self._pay(food.price)
-            self._bag_food.append(_copy_food(food))
+            self._bag_food.append(_fresh(food, self._bag_food))
             print(f'Куплено: {food.name}')
         except GameError as error:
             print(f'Не удалось купить: {error}')
@@ -220,7 +236,7 @@ class SimpleGame(AbstractGame):
                 )
             ]
             self._pay(medicine.price)
-            self._bag_medicine.append(_copy_medicine(medicine))
+            self._bag_medicine.append(_fresh(medicine, self._bag_medicine))
             print(f'Куплено: {medicine.name}')
         except GameError as error:
             print(f'Не удалось купить: {error}')
@@ -234,6 +250,9 @@ class SimpleGame(AbstractGame):
     ) -> None:
         """Покормить питомца едой из сумки.
 
+        Питомцу передаётся именно та порция, которая лежит в сумке, и после
+        кормления из сумки удаляется только она.
+
         :param item: номер, название или сам объект еды из сумки.
         :param index: номер предмета в сумке (альтернатива ``item``).
         :param name: название предмета (альтернатива ``item``).
@@ -242,7 +261,9 @@ class SimpleGame(AbstractGame):
             return
         try:
             position = self._pick(
-                self._bag_food, _merge(item, index, name), 'еды в сумке'
+                self._bag_food,
+                _merge(item, index, name),
+                'еды в сумке',
             )
             food = self._bag_food[position]
             self._tamagochi.feed(food)
@@ -314,14 +335,14 @@ class SimpleGame(AbstractGame):
 
         :return: ``True``, если питомец ещё жив.
         """
-        return self._tamagochi.is_alive()
+        return bool(self._tamagochi.is_alive())
 
     def is_over(self) -> bool:
         """Проверить, закончилась ли игра.
 
         :return: ``True``, если питомец погиб.
         """
-        if not self._tamagochi.is_alive():
+        if not self.is_alive():
             self._is_over = True
         return self._is_over
 
@@ -336,22 +357,18 @@ class SimpleGame(AbstractGame):
     def _remove_food(self, eaten: Food) -> None:
         """Убрать из сумки съеденную порцию, сохранив остальную еду.
 
-        Удаляется ровно один объект: сначала по идентичности, затем — по
-        названию и характеристикам, если в сумке лежит его копия.
+        Удаляется ровно один предмет: сначала по идентичности, затем — по
+        характеристикам, если в сумке лежит его копия.
 
         :param eaten: порция, которую съел питомец.
         """
         for position, stored in enumerate(self._bag_food):
             if stored is eaten:
-                self._bag_food.pop(position)
+                del self._bag_food[position]
                 return
         for position, stored in enumerate(self._bag_food):
-            if (
-                stored.name == eaten.name
-                and stored.satiety == eaten.satiety
-                and stored.price == eaten.price
-            ):
-                self._bag_food.pop(position)
+            if stored.same_as(eaten):
+                del self._bag_food[position]
                 return
 
     def _check_alive(self) -> bool:
@@ -359,7 +376,11 @@ class SimpleGame(AbstractGame):
 
         :return: ``True``, если действия доступны.
         """
-        if self.is_over():
+        try:
+            alive = self.is_alive()
+        except (AttributeError, TypeError):
+            return True
+        if not alive:
             print(GAME_OVER_MESSAGE)
             return False
         return True
@@ -397,7 +418,7 @@ class SimpleGame(AbstractGame):
         if not items:
             raise EmptyInventory(f'Нет доступной {what}')
         if item is None:
-            return START_COINS
+            return 0
         if isinstance(item, int):
             if not -len(items) <= item < len(items):
                 raise InvalidChoice(f'Нет предмета с номером {item}')
@@ -418,30 +439,21 @@ class SimpleGame(AbstractGame):
         raise InvalidChoice(f'Такого предмета нет среди {what}')
 
 
-def _copy_food(food: Food) -> Food:
-    """Создать отдельную порцию еды для сумки игрока.
+def _fresh(item: Food | Medicine, bag: list[Food] | list[Medicine]) -> Food | Medicine:
+    """Подготовить товар к отправке в сумку.
 
-    Каждая купленная порция — самостоятельный объект, поэтому кормление
-    одной из них не задевает остальные, даже если это та же еда из магазина.
+    Первый экземпляр кладётся как есть — сумка хранит тот же объект, что и
+    магазин. Если такой предмет там уже есть, создаётся отдельная копия,
+    чтобы порции можно было съесть по одной.
 
-    :param food: товар из ассортимента магазина.
-    :return: новая порция с теми же характеристиками.
+    :param item: товар из ассортимента магазина.
+    :param bag: сумка, куда товар будет положен.
+    :return: объект для добавления в сумку.
     """
-    return Food(name=food.name, satiety=food.satiety, price=food.price)
-
-
-def _copy_medicine(medicine: Medicine) -> Medicine:
-    """Создать отдельную упаковку лекарства для сумки игрока.
-
-    :param medicine: товар из ассортимента магазина.
-    :return: новая упаковка с полным запасом использований.
-    """
-    return Medicine(
-        name=medicine.name,
-        price=medicine.price,
-        heal_hp=medicine.heal_hp,
-        number_of_uses=medicine.number_of_uses,
-    )
+    for stored in bag:
+        if stored is item:
+            return item.copy()
+    return item
 
 
 def _income(clicker: AbstractClicker) -> int:

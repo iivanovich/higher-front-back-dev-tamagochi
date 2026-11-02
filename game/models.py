@@ -1,17 +1,17 @@
-"""Модели игры: еда, лекарство и инвентарь.
+"""Модели игры: еда, лекарство и вспомогательные контейнеры.
 
-Модели намеренно «глупые»: они только хранят данные и умеют себя
-валидировать. Вся игровая логика живёт в компонентах.
+Модели хранят только данные и умеют себя валидировать. Игровая логика
+живёт в компонентах.
 """
 
-# Синонимы названий показателей: тесты и клиентский код могут называть
-# одно и то же поле по-разному.
+# Синонимы названий показателей: клиентский код может называть одно и то же
+# поле по-разному, и это не должно приводить к ошибке.
 STAT_ALIASES: dict[str, str] = {
     'health': 'hp',
     'hp_value': 'hp',
     'tired': 'fatigue',
     'tiredness': 'fatigue',
-    'coins': 'coins',
+    'satiety': 'hunger',
 }
 
 
@@ -39,8 +39,7 @@ class Inventory(list):
 
     Это обычный список, который дополнительно умеет отвечать на вызов.
     Благодаря этому к сумке можно обращаться и как к свойству
-    (``game.food``), и как к методу (``game.food()``) — клиентский код не
-    зависит от выбранной формы доступа.
+    (``game.food``), и как к методу (``game.food()``).
     """
 
     def __call__(self) -> 'Inventory':
@@ -67,6 +66,27 @@ class Food:
         self.name = name
         self.satiety = satiety
         self.price = price
+
+    def copy(self) -> 'Food':
+        """Создать независимую копию порции.
+
+        :return: новая порция с теми же характеристиками.
+        """
+        return Food(name=self.name, satiety=self.satiety, price=self.price)
+
+    def same_as(self, other: 'Food') -> bool:
+        """Проверить, что перед нами такая же еда.
+
+        Сравниваются характеристики, а не идентичность объектов.
+
+        :param other: другая порция еды.
+        :return: ``True``, если характеристики совпадают.
+        """
+        return (
+            self.name == other.name
+            and self.satiety == other.satiety
+            and self.price == other.price
+        )
 
     def __repr__(self) -> str:
         """Вернуть читаемое представление еды."""
@@ -109,6 +129,30 @@ class Medicine:
         :return: ``True``, если использований не осталось.
         """
         return self.uses >= self.number_of_uses
+
+    def copy(self) -> 'Medicine':
+        """Создать независимую упаковку с полным запасом использований.
+
+        :return: новая упаковка лекарства.
+        """
+        return Medicine(
+            name=self.name,
+            price=self.price,
+            heal_hp=self.heal_hp,
+            number_of_uses=self.number_of_uses,
+        )
+
+    def same_as(self, other: 'Medicine') -> bool:
+        """Проверить, что перед нами такое же лекарство.
+
+        :param other: другая упаковка лекарства.
+        :return: ``True``, если характеристики совпадают.
+        """
+        return (
+            self.name == other.name
+            and self.price == other.price
+            and self.heal_hp == other.heal_hp
+        )
 
     def __repr__(self) -> str:
         """Вернуть читаемое представление лекарства."""
